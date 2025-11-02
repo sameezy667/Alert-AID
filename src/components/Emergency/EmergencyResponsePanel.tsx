@@ -236,48 +236,7 @@ const EmergencyResponsePanel: React.FC = () => {
 
   const [status, setStatus] = useState<{ message: string; type: 'info' | 'success' | 'warning' | 'error' } | null>(null);
 
-  // SOS countdown timer
-  useEffect(() => {
-    let timer: NodeJS.Timeout;
-    
-    if (sosState.isActive && sosState.countdown > 0) {
-      timer = setTimeout(() => {
-        setSosState(prev => ({ ...prev, countdown: prev.countdown - 1 }));
-      }, 1000);
-    } else if (sosState.isActive && sosState.countdown === 0) {
-      // Execute SOS actions
-      executeSOS();
-    }
-    
-    return () => clearTimeout(timer);
-  }, [sosState.isActive, sosState.countdown, executeSOS]);
-
-  // Start SOS sequence
-  const startSOS = () => {
-    setStatus({ message: 'SOS activated! Canceling in 10 seconds...', type: 'warning' });
-    setSosState({
-      isActive: true,
-      startTime: Date.now(),
-      countdown: 10,
-      locationSent: false,
-      contactsNotified: []
-    });
-  };
-
-  // Cancel SOS
-  const cancelSOS = () => {
-    setSosState({
-      isActive: false,
-      startTime: null,
-      countdown: 0,
-      locationSent: false,
-      contactsNotified: []
-    });
-    setStatus({ message: 'SOS canceled', type: 'info' });
-    setTimeout(() => setStatus(null), 3000);
-  };
-
-  // Execute SOS actions
+  // Execute SOS actions - defined before useEffect to avoid hoisting issues
   const executeSOS = async () => {
     try {
       setStatus({ message: 'Executing emergency protocol...', type: 'warning' });
@@ -347,6 +306,47 @@ const EmergencyResponsePanel: React.FC = () => {
         type: 'error' 
       });
     }
+  };
+
+  // SOS countdown timer
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    
+    if (sosState.isActive && sosState.countdown > 0) {
+      timer = setTimeout(() => {
+        setSosState(prev => ({ ...prev, countdown: prev.countdown - 1 }));
+      }, 1000);
+    } else if (sosState.isActive && sosState.countdown === 0) {
+      // Execute SOS actions
+      executeSOS();
+    }
+    
+    return () => clearTimeout(timer);
+  }, [sosState.isActive, sosState.countdown, executeSOS]);
+
+  // Start SOS sequence
+  const startSOS = () => {
+    setStatus({ message: 'SOS activated! Canceling in 10 seconds...', type: 'warning' });
+    setSosState({
+      isActive: true,
+      startTime: Date.now(),
+      countdown: 10,
+      locationSent: false,
+      contactsNotified: []
+    });
+  };
+
+  // Cancel SOS
+  const cancelSOS = () => {
+    setSosState({
+      isActive: false,
+      startTime: null,
+      countdown: 0,
+      locationSent: false,
+      contactsNotified: []
+    });
+    setStatus({ message: 'SOS canceled', type: 'info' });
+    setTimeout(() => setStatus(null), 3000);
   };
 
   // Get current location for SOS with enhanced accuracy
