@@ -37,19 +37,14 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
-# CORS Configuration - Allow all origins for development
+# CORS Configuration - Get allowed origins from environment variable or use defaults
+CORS_ORIGINS = os.getenv("CORS_ORIGINS", "*")
+allowed_origins = [origin.strip() for origin in CORS_ORIGINS.split(",")] if CORS_ORIGINS != "*" else ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://localhost:3001", 
-        "http://localhost:4200",
-        "http://127.0.0.1:3000",
-        "http://127.0.0.1:3001",
-        "http://127.0.0.1:4200",
-        "*"  # Allow all for development
-    ],
-    allow_credentials=True,
+    allow_origins=allowed_origins,
+    allow_credentials=False,  # Set to False when using "*" to avoid CORS issues
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
@@ -114,22 +109,7 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
-# CRITICAL CORS Configuration - MUST ALLOW FRONTEND ACCESS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",   # React dev server
-        "http://localhost:3001",   # Alternative React port
-        "http://localhost:4200",   # Angular dev server
-        "http://127.0.0.1:3000",   # Alternative localhost
-        "http://127.0.0.1:3001",   # Alternative localhost
-        "http://127.0.0.1:4200",   # Alternative localhost
-        "*"  # Allow all origins for development (restrict in production)
-    ],
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["*"],
-)
+# CORS middleware already configured above - don't add duplicate!
 
 # Register all API routes with proper prefixes
 app.include_router(health.router, prefix="/api", tags=["Health Check"])
