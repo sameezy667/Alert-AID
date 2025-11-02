@@ -94,24 +94,27 @@ vercel --prod
 2. Click **"New Project"**
 3. Select **"Deploy from GitHub repo"**
 4. Choose your **Alert-AID** repository
-5. Railway will detect it's a monorepo. Select:
-   - **Root Directory**: `backend`
+5. **IMPORTANT**: Railway will auto-detect the project type:
+   - It should detect Python (from `requirements.txt` in root and `nixpacks.toml`)
+   - If it tries to build the frontend, manually configure:
+     - **Settings** → **Build** → **Build Command**: `pip install -r backend/requirements.txt`
+     - **Settings** → **Deploy** → **Start Command**: `cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT`
 6. Add Environment Variables in Railway Dashboard:
    - `OPENWEATHER_API_KEY`: `1801423b3942e324ab80f5b47afe0859`
-   - `CORS_ORIGINS`: `https://your-vercel-app.vercel.app` (add your Vercel URL)
-   - `PORT`: `8000`
+   - `CORS_ORIGINS`: `https://your-vercel-app.vercel.app` (add your Vercel URL after Vercel deployment)
+   - `PORT`: Railway will auto-assign this, but you can set `8000` as default
 7. Click **"Deploy"**
 
 Railway will:
-- Detect Python project
+- Detect Python project via `nixpacks.toml` and `Procfile`
 - Install dependencies from `requirements.txt`
-- Run `python main.py`
+- Run the backend on the assigned port
 - Provide a public URL like: `https://alert-aid-production.up.railway.app`
 
 8. **Copy the Railway URL** and update your Vercel environment variable:
    - Go to Vercel Dashboard → Your Project → Settings → Environment Variables
-   - Update `REACT_APP_API_URL` to your Railway URL
-   - Redeploy your Vercel project
+   - Add or update `REACT_APP_API_URL` to your Railway URL
+   - Redeploy your Vercel project (or it will auto-redeploy)
 
 ## Step 6: Final Verification
 
