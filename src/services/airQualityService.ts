@@ -49,7 +49,7 @@ class AirQualityService {
       logger.info(`🌫️ Fetching AQI data for ${latitude}, ${longitude}`);
       
       const response = await fetch(
-        `${API_BASE_URL}/weather/air-quality/${latitude}/${longitude}`,
+        `${API_BASE_URL}/api/weather/air-quality/${latitude}/${longitude}`,
         {
           method: 'GET',
           headers: {
