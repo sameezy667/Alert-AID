@@ -387,10 +387,6 @@ const Dashboard: React.FC = () => {
       const loc = await enhancedLocationService.getCurrentLocation();
       const weatherData = await SimpleWeatherService.getWeather(loc.latitude, loc.longitude);
       
-      // Fetch forecast and AQI data in parallel
-      fetchForecastData();
-      fetchAQIData();
-      
       const weatherFactors: WeatherRiskFactors = {
         temp: weatherData.current.temp,
         feelsLike: weatherData.current.feels_like,
@@ -432,15 +428,19 @@ const Dashboard: React.FC = () => {
     } finally {
       setIsCalculatingRisk(false);
     }
-  }, [fetchForecastData, fetchAQIData, aqiData]);
+  }, [aqiData]);
 
-  // Simulate initial loading process
+  // Load dashboard data on mount and set up refresh interval
   useEffect(() => {
     const loadDashboard = async () => {
-      // Calculate risk first
-      await calculateGlobalRisk();
+      // Fetch all data in parallel
+      await Promise.all([
+        fetchForecastData(),
+        fetchAQIData(),
+        calculateGlobalRisk()
+      ]);
       
-      // Simulate API calls and component initialization
+      // Simulate component initialization
       await new Promise(resolve => setTimeout(resolve, 1500));
       setDashboardLoaded(true);
       
@@ -451,7 +451,23 @@ const Dashboard: React.FC = () => {
     };
 
     loadDashboard();
-  }, [calculateGlobalRisk]);
+    
+    // Set up periodic refresh every 5 minutes
+    const refreshInterval = setInterval(() => {
+      fetchForecastData();
+      fetchAQIData();
+      calculateGlobalRisk();
+    }, 5 * 60 * 1000); // 5 minutes
+    
+    return () => clearInterval(refreshInterval);
+  }, []); // Run only once on mount
+
+  // Recalculate risk when AQI data changes (but don't fetch AQI again)
+  useEffect(() => {
+    if (aqiData && dashboardLoaded) {
+      calculateGlobalRisk();
+    }
+  }, [aqiData, dashboardLoaded, calculateGlobalRisk]);
 
   // Memoize time formatting to prevent excessive re-renders
   const formatTimeUntilNextRefresh = useCallback((nextRefresh: Date | null) => {
