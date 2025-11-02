@@ -19,10 +19,7 @@ import {
 import ManualLocationSearch from '../Location/ManualLocationSearch';
 import { 
   productionColors, 
-  productionAnimations, 
-  secondaryButton,
-  primaryButton,
-  interactiveStates
+  productionAnimations
 } from '../../styles/production-ui-system';
 import { enhancedLocationService } from '../../services/enhancedLocationService';
 import { LiveStatusBadge, GPSStatusBadge, LastUpdatedBadge } from '../common/StatusBadges';
@@ -370,16 +367,6 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
       setIsLocationLoading(false);
     }
   }, []);
-
-  const clearLocationCache = useCallback(() => {
-    try {
-      localStorage.removeItem('enhanced-location-cache');
-      console.log('🗑️ Location cache cleared');
-      updateLocation();
-    } catch (error) {
-      console.error('Failed to clear location cache:', error);
-    }
-  }, [updateLocation]);
 
   // Initialize location on mount
   useEffect(() => {

@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { Play, Download, RefreshCw, AlertCircle, CheckCircle, Activity } from 'lucide-react';
+import { Play, Download, RefreshCw, AlertCircle, Activity } from 'lucide-react';
 import { Card } from '../../styles/components';
-import { PrimaryButton, SecondaryButton, EmergencyButton as EmergencyBtn, PulseButton, ButtonGroup } from '../common/EnhancedButtons';
+import { SecondaryButton, EmergencyButton as EmergencyBtn, PulseButton, ButtonGroup } from '../common/EnhancedButtons';
 import { useRunPrediction, useCreateEmergencyAlert } from '../../hooks/useDashboard';
 import { useGeolocation } from '../Location/GeolocationManager';
 import { useNotifications } from '../../contexts/NotificationContext';
 import { useToast } from '../Notifications/ToastSystem';
 import { verifySystemStatus } from '../../services/apiService';
-import { productionColors } from '../../styles/production-ui-system';
 
 const ActionsContainer = styled(Card)`
   display: flex;

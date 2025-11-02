@@ -2,7 +2,6 @@ import React from 'react';
 import styled from 'styled-components';
 import CurrentAlerts from '../components/Dashboard/CurrentAlerts';
 import { productionColors, productionCard } from '../styles/production-ui-system';
-import { AlertTriangle } from 'lucide-react';
 
 const AlertsContainer = styled.div`
   min-height: 100vh;

@@ -78,8 +78,6 @@ export function useDashboard() {
     riskPrediction,
     weather,
     alerts,
-    forecast,
-    modelPerformance,
     loading,
     errors,
     lastUpdated,
@@ -160,14 +158,6 @@ export function useDashboard() {
       wind: weather.wind_speed,
     } : null,
   };
-}
-
-// Helper function to determine risk level
-function getRiskLevel(risk: number): 'low' | 'medium' | 'high' | 'critical' {
-  if (risk >= 9) return 'critical';
-  if (risk >= 7) return 'high';
-  if (risk >= 4) return 'medium';
-  return 'low';
 }
 
 // Legacy hooks for backward compatibility

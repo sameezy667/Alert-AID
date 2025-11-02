@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import styled from 'styled-components';
 import { AlertTriangle, Clock, RefreshCw } from 'lucide-react';
 import { Card, Heading, Text, StatusIndicator, Flex, Button } from '../../styles/components';
@@ -183,7 +183,7 @@ const CurrentAlerts: React.FC<CurrentAlertsProps> = () => {
   const { addNotification } = useNotifications();
 
   // alertsData is already an array of alerts from useDashboard
-  const displayAlerts: Alert[] = (alertsData as Alert[]) || [];
+  const displayAlerts: Alert[] = useMemo(() => (alertsData as Alert[]) || [], [alertsData]);
 
   // Convert alerts to notifications
   useEffect(() => {

@@ -2,7 +2,6 @@ import React from 'react';
 import styled from 'styled-components';
 import EvacuationSafetyModule from '../components/Safety/EvacuationSafetyModule';
 import { productionColors, productionCard } from '../styles/production-ui-system';
-import { MapPin, Route } from 'lucide-react';
 
 const EvacuationContainer = styled.div`
   min-height: 100vh;

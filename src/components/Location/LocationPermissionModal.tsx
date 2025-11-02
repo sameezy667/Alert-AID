@@ -8,7 +8,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
 import { MapPin, AlertCircle, Navigation } from 'lucide-react';
 import { enhancedSpacing } from '../../styles/enhanced-design-system';
-import { LocationData, LocationPermissionModalProps, ReverseGeocodeResponse } from './types';
+import { LocationPermissionModalProps, ReverseGeocodeResponse } from './types';
 import { ExternalAPIService } from '../../services/externalAPIs';
 
 // Animation keyframes (for future use)
@@ -180,39 +180,6 @@ export const LocationPermissionModal: React.FC<LocationPermissionModalProps> = (
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Reverse geocoding to get city/state from coordinates
-  const reverseGeocode = async (latitude: number, longitude: number): Promise<ReverseGeocodeResponse> => {
-    try {
-      // Using OpenStreetMap Nominatim for reverse geocoding (free, no API key needed)
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`,
-        {
-          headers: {
-            'User-Agent': 'AlertAid-DisasterManagement/1.0'
-          }
-        }
-      );
-
-      if (!response.ok) throw new Error('Geocoding failed');
-
-      const data = await response.json();
-      const address = data.address || {};
-
-      return {
-        city: address.city || address.town || address.village || 'Unknown City',
-        state: address.state || address.region || 'Unknown State',
-        country: address.country || 'Unknown Country'
-      };
-    } catch (error) {
-      console.warn('Reverse geocoding failed:', error);
-      return {
-        city: 'Unknown City',
-        state: 'Unknown State',
-        country: 'Unknown Country'
-      };
-    }
-  };
 
   const requestLocation = useCallback(async () => {
     setIsLoading(true);

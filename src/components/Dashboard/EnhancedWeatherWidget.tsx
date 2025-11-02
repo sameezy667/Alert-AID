@@ -15,7 +15,7 @@ import {
   CloudSnow,
   Zap
 } from 'lucide-react';
-import { productionColors, productionAnimations } from '../../styles/production-ui-system';
+import { productionColors } from '../../styles/production-ui-system';
 import { enhancedLocationService } from '../../services/enhancedLocationService';
 import SimpleWeatherService from '../../services/simpleWeatherService';
 import { SkeletonWeatherWidget } from '../common/SkeletonLoaders';

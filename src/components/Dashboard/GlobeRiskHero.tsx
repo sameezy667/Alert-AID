@@ -1,6 +1,6 @@
 import React from 'react';
 import styled, { keyframes } from 'styled-components';
-import { AlertTriangle, TrendingUp, Shield, Activity, Pause, Play, RotateCcw } from 'lucide-react';
+import { AlertTriangle, TrendingUp, Shield, Activity } from 'lucide-react';
 import InteractiveGlobe from '../ThreeD/InteractiveGlobe';
 
 // Animations

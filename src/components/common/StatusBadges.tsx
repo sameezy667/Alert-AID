@@ -1,6 +1,6 @@
 import React from 'react';
 import styled, { keyframes } from 'styled-components';
-import { Clock, MapPin, Wifi, WifiOff, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
+import { Clock, MapPin, WifiOff, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 import { productionColors, productionAnimations } from '../../styles/production-ui-system';
 
 // Pulse animation for live indicators

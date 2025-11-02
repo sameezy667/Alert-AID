@@ -85,4 +85,5 @@ class WeatherForecastService {
   }
 }
 
-export default new WeatherForecastService();
+const weatherForecastService = new WeatherForecastService();
+export default weatherForecastService;

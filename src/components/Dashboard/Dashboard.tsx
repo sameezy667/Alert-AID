@@ -18,7 +18,6 @@ import EmergencyResponsePanel from '../Emergency/EmergencyResponsePanel';
 import EvacuationSafetyModule from '../Safety/EvacuationSafetyModule';
 import ResourceManagementDashboard from '../Resources/ResourceManagementDashboard';
 import CommunicationHub from '../Communication/CommunicationHub';
-import { WeatherDashboardPanel } from '../Dashboard/WeatherDashboardPanel';
 import EnhancedWeatherWidget from '../Dashboard/EnhancedWeatherWidget';
 import AirQualityWidget from './AirQualityWidget';
 import { SystemDiagnostics } from '../Diagnostics/SystemDiagnostics';

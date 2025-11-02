@@ -47,7 +47,7 @@ git push -u origin main
 ## Step 4: Deploy to Vercel
 
 ### Option A: Using Vercel Dashboard (Recommended)
-
+ 
 1. Go to [vercel.com](https://vercel.com) and log in (or sign up with GitHub)
 2. Click **"Add New Project"** or **"Import Project"**
 3. Select **"Import Git Repository"**

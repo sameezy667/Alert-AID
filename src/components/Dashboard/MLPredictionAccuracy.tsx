@@ -167,17 +167,6 @@ const MLPredictionAccuracy: React.FC<MLPredictionAccuracyProps> = React.memo(() 
   // Generate realistic accuracy data if API fails or returns null
   const fallbackAccuracy = 87 + Math.round(Math.random() * 8); // 87-95% range
   
-  // Convert accuracy to percentage if it's a decimal (0.87 -> 87%)
-  const convertToPercentage = (accuracy: number) => {
-    if (accuracy < 1) {
-      // It's a decimal, convert to percentage
-      return Math.round(accuracy * 100);
-    } else {
-      // It's already a percentage
-      return Math.round(accuracy);
-    }
-  };
-  
   // Handle both decimal (0.87) and percentage (87) formats with minimum threshold
   let currentAccuracy: number;
   // Model performance endpoint removed - use fallback accuracy

@@ -148,43 +148,6 @@ const QuickCallButton = styled(Button)`
   min-width: auto;
 `;
 
-const MedicalInfoGrid = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: ${({ theme }) => theme.spacing.md};
-  
-  @media (max-width: ${({ theme }) => theme.breakpoints.sm}) {
-    grid-template-columns: 1fr;
-  }
-`;
-
-const InfoItem = styled.div`
-  background: ${({ theme }) => theme.colors.surface.default};
-  padding: ${({ theme }) => theme.spacing.md};
-  border-radius: ${({ theme }) => theme.borderRadius.md};
-  border: 1px solid ${({ theme }) => theme.colors.surface.border};
-  
-  .label {
-    font-size: 0.875rem;
-    color: ${({ theme }) => theme.colors.text.caption};
-    margin-bottom: ${({ theme }) => theme.spacing.xs};
-  }
-  
-  .value {
-    color: ${({ theme }) => theme.colors.text.primary};
-    font-weight: 500;
-  }
-  
-  .list {
-    color: ${({ theme }) => theme.colors.text.secondary};
-    
-    .item {
-      margin: 2px 0;
-      font-size: 0.9rem;
-    }
-  }
-`;
-
 const StatusMessage = styled.div<{ type: 'info' | 'success' | 'warning' | 'error' }>`
   padding: ${({ theme }) => theme.spacing.md};
   border-radius: ${({ theme }) => theme.borderRadius.md};
@@ -287,7 +250,7 @@ const EmergencyResponsePanel: React.FC = () => {
     }
     
     return () => clearTimeout(timer);
-  }, [sosState.isActive, sosState.countdown]);
+  }, [sosState.isActive, sosState.countdown, executeSOS]);
 
   // Start SOS sequence
   const startSOS = () => {
@@ -551,22 +514,6 @@ This is an automated emergency alert. Please respond immediately.`;
     
     // Make the call
     window.open(`tel:${phone}`);
-  };
-
-  // Add new emergency contact
-  const addEmergencyContact = (contact: Omit<EmergencyContact, 'id'>) => {
-    const newContact: EmergencyContact = {
-      ...contact,
-      id: Date.now().toString()
-    };
-    setEmergencyContacts(prev => [...prev, newContact]);
-    setStatus({ message: `Added ${contact.name} to emergency contacts`, type: 'success' });
-  };
-
-  // Remove emergency contact
-  const removeEmergencyContact = (id: string) => {
-    setEmergencyContacts(prev => prev.filter(contact => contact.id !== id));
-    setStatus({ message: 'Contact removed', type: 'info' });
   };
 
   // Load data from localStorage

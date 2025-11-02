@@ -23,8 +23,10 @@ export const FORCE_DEFAULT_LOCATION = false;
 // PRODUCTION: Set to TRUE to enable real GPS detection
 export const ENABLE_GPS_DETECTION = true;
 
-export default {
+const locationConfig = {
   DEFAULT_LOCATION,
   FORCE_DEFAULT_LOCATION,
   ENABLE_GPS_DETECTION
 };
+
+export default locationConfig;

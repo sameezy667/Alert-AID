@@ -192,7 +192,7 @@ const ToastComponent: React.FC<{
       const timer = setTimeout(handleDismiss, toast.duration);
       return () => clearTimeout(timer);
     }
-  }, [toast]);
+  }, [toast, handleDismiss]);
 
   return (
     <ToastCard type={toast.type} isExiting={isExiting}>
