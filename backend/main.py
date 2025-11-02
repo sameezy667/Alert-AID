@@ -45,14 +45,30 @@ allowed_origins = [origin.strip() for origin in CORS_ORIGINS.split(",")] if CORS
 
 print(f"🔧 CORS Configuration: allow_origins={allowed_origins}")  # Use print before logger is initialized
 
+# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins,
-    allow_credentials=False,  # MUST be False when using wildcard
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["*"],
+    allow_origins=["*"],  # Allow all origins
+    allow_credentials=False,
+    allow_methods=["*"],  # Allow all methods
+    allow_headers=["*"],  # Allow all headers
     expose_headers=["*"]
 )
+
+# Add custom middleware to force CORS headers on every response
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+
+class ForceCORSMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+        response.headers["Access-Control-Allow-Headers"] = "*"
+        response.headers["Access-Control-Expose-Headers"] = "*"
+        return response
+
+app.add_middleware(ForceCORSMiddleware)
 
 # Logging setup
 logging.basicConfig(
