@@ -37,16 +37,21 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
-# CORS Configuration - Get allowed origins from environment variable or use defaults
+# CORS Configuration - CRITICAL FIX FOR RAILWAY DEPLOYMENT
+# Allow all origins with wildcard for public API access
+# Railway deployment timestamp: 2025-11-03 04:10:00 UTC
 CORS_ORIGINS = os.getenv("CORS_ORIGINS", "*")
 allowed_origins = [origin.strip() for origin in CORS_ORIGINS.split(",")] if CORS_ORIGINS != "*" else ["*"]
+
+logger.info(f"🔧 CORS Configuration: allow_origins={allowed_origins}")
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
-    allow_credentials=False,  # Set to False when using "*" to avoid CORS issues
+    allow_credentials=False,  # MUST be False when using wildcard
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
+    expose_headers=["*"]
 )
 
 # Logging setup
