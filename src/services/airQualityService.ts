@@ -26,10 +26,9 @@ export interface AQIData {
   is_real: boolean;
 }
 
-// HARDCODED FIX: Force Railway URL in production
-const API_BASE_URL = process.env.NODE_ENV === 'production'
-  ? 'https://web-production-2f56.up.railway.app'
-  : 'http://localhost:8000';
+// Use environment variable or fallback to localhost
+const rawApiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+const API_BASE_URL = rawApiUrl.endsWith('/') ? rawApiUrl.slice(0, -1) : rawApiUrl;
 
 class AirQualityService {
   private cache: Map<string, { data: AQIData; timestamp: number }> = new Map();

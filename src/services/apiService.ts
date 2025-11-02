@@ -7,20 +7,17 @@ import {
   WeatherApiConfig 
 } from '../types/weather';
 
-// API Configuration - Updated for production backend
-// HARDCODED FIX: Force correct Railway URL without trailing slash
+// API Configuration - Production ready with environment variable support
 const rawApiUrl = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
-const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://web-production-2f56.up.railway.app'  // HARDCODED - no trailing slash
-  : (rawApiUrl.endsWith('/') ? rawApiUrl.slice(0, -1) : rawApiUrl);
+const API_BASE_URL = rawApiUrl.endsWith('/') ? rawApiUrl.slice(0, -1) : rawApiUrl;
 const API_PREFIX = '/api'; // All our endpoints start with /api
 const API_TIMEOUT = 15000; // 15 seconds for ML operations
 
 console.log('🔧 API Configuration:', { 
   NODE_ENV: process.env.NODE_ENV,
-  rawApiUrl,
+  REACT_APP_API_URL: process.env.REACT_APP_API_URL,
   API_BASE_URL, 
-  fullHealthUrl: `${API_BASE_URL}${API_PREFIX}/health` 
+  fullHealthUrl: `${API_BASE_URL}${API_PREFIX}/health`
 });
 
 // Enhanced type definitions matching backend models
