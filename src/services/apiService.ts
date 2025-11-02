@@ -8,9 +8,13 @@ import {
 } from '../types/weather';
 
 // API Configuration - Updated for production backend
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
+// Remove trailing slash from API_BASE_URL to prevent double slashes in URLs
+const rawApiUrl = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
+const API_BASE_URL = rawApiUrl.endsWith('/') ? rawApiUrl.slice(0, -1) : rawApiUrl;
 const API_PREFIX = '/api'; // All our endpoints start with /api
 const API_TIMEOUT = 15000; // 15 seconds for ML operations
+
+console.log('🔧 API Configuration:', { API_BASE_URL, fullHealthUrl: `${API_BASE_URL}${API_PREFIX}/health` });
 
 // Enhanced type definitions matching backend models
 export interface DisasterRiskPrediction {

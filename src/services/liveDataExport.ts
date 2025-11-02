@@ -219,7 +219,9 @@ Real-time data integration with ML predictions
 // Fetch ML metrics from backend
 const fetchMLMetrics = async () => {
   try {
-    const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+    // Remove trailing slash to prevent double slashes in URLs
+    const rawApiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+    const API_BASE_URL = rawApiUrl.endsWith('/') ? rawApiUrl.slice(0, -1) : rawApiUrl;
     const response = await fetch(`${API_BASE_URL}/api/predict/ml-metrics`);
     const data = await response.json();
     

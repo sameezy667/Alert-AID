@@ -26,7 +26,9 @@ export interface AQIData {
   is_real: boolean;
 }
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+// Remove trailing slash to prevent double slashes in URLs
+const rawApiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+const API_BASE_URL = rawApiUrl.endsWith('/') ? rawApiUrl.slice(0, -1) : rawApiUrl;
 
 class AirQualityService {
   private cache: Map<string, { data: AQIData; timestamp: number }> = new Map();

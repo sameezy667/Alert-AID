@@ -5,7 +5,9 @@
 
 import logger from '../utils/logger';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
+// Remove trailing slash to prevent double slashes in URLs
+const rawApiUrl = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
+const API_BASE_URL = rawApiUrl.endsWith('/') ? rawApiUrl.slice(0, -1) : rawApiUrl;
 
 export interface DailyForecast {
   date: string;
