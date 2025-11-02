@@ -132,7 +132,7 @@ app.add_middleware(
 )
 
 # Register all API routes with proper prefixes
-app.include_router(health.router, tags=["Health Check"])
+app.include_router(health.router, prefix="/api", tags=["Health Check"])
 app.include_router(weather.router, prefix="/api", tags=["Weather"])
 app.include_router(predict.router, prefix="/api", tags=["ML Predictions"])
 app.include_router(alerts.router, prefix="/api", tags=["Alerts"])
