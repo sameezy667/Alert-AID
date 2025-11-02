@@ -43,7 +43,7 @@ app = FastAPI(
 CORS_ORIGINS = os.getenv("CORS_ORIGINS", "*")
 allowed_origins = [origin.strip() for origin in CORS_ORIGINS.split(",")] if CORS_ORIGINS != "*" else ["*"]
 
-logger.info(f"🔧 CORS Configuration: allow_origins={allowed_origins}")
+print(f"🔧 CORS Configuration: allow_origins={allowed_origins}")  # Use print before logger is initialized
 
 app.add_middleware(
     CORSMiddleware,
