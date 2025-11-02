@@ -123,18 +123,21 @@ app.include_router(external_apis.router, prefix="/api", tags=["External Data"])
 async def root():
     """Root endpoint with API information"""
     return {
-        "message": "Alert Aid API - Disaster Management System",
+        "message": "Alert Aid API - Disaster Management System  🚀",
         "status": "operational",
-        "version": "1.0.0",
+        "version": "1.0.2-cors-fixed",  # Updated version to verify deployment
         "timestamp": datetime.now().isoformat(),
+        "git_commit": "cors-fix-applied",
         "endpoints": {
-            "health": "/health",
+            "health": "/api/health",  # FIXED: Added /api prefix
             "docs": "/docs",
             "weather": "/api/weather/{lat}/{lon}",
             "predict": "/api/predict/disaster-risk",
             "alerts": "/api/alerts/active?lat={lat}&lon={lon}",
             "external": "/api/external-data?lat={lat}&lon={lon}"
-        }
+        },
+        "cors_enabled": True,
+        "deployment_note": "If you see this version, Railway deployed latest code successfully!"
     }
 
 # Startup event
