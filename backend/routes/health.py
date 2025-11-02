@@ -20,8 +20,9 @@ async def health_check():
             "external_apis": "connected",
             "database": "not_implemented"
         },
-        "version": "1.0.0",
-        "uptime": "active"
+        "version": "1.0.1",  # Updated to verify Railway deployment
+        "uptime": "active",
+        "cors_fixed": True  # Indicator that CORS fix is deployed
     }
 
 @router.get("/health/detailed")
