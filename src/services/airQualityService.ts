@@ -26,7 +26,7 @@ export interface AQIData {
   is_real: boolean;
 }
 
-const API_BASE_URL = 'http://localhost:8000/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
 class AirQualityService {
   private cache: Map<string, { data: AQIData; timestamp: number }> = new Map();
