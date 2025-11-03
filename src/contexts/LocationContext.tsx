@@ -157,71 +157,80 @@ export const LocationProvider: React.FC<LocationProviderProps> = ({ children }) 
 
     // Reverse geocode using multiple API fallbacks for better accuracy
     const reverseGeocode = async (lat: number, lon: number): Promise<LocationData> => {
-      // Try OpenWeatherMap first (primary)
+      // Try Nominatim FIRST (most accurate city names)
       try {
-        const API_KEY = '1801423b3942e324ab80f5b47afe0859';
-        const response = await fetch(
-          `https://api.openweathermap.org/geo/1.0/reverse?lat=${lat}&lon=${lon}&limit=1&appid=${API_KEY}`
+        const nominatimResponse = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&addressdetails=1`,
+          {
+            headers: {
+              'User-Agent': 'AlertAid-DisasterApp/1.0'
+            }
+          }
         );
         
-        if (!response.ok) {
-          throw new Error(`OpenWeatherMap geocoding failed: ${response.status}`);
+        if (!nominatimResponse.ok) {
+          throw new Error(`Nominatim geocoding failed: ${nominatimResponse.status}`);
         }
         
-        const data = await response.json();
+        const nominatimData = await nominatimResponse.json();
         
-        if (data && data.length > 0) {
-          const location = data[0];
-          console.log('✅ OpenWeatherMap reverse geocode success:', location.name);
+        if (nominatimData && nominatimData.address) {
+          const addr = nominatimData.address;
+          // Prioritize: city > town > village > suburb > municipality
+          const cityName = addr.city || addr.town || addr.village || addr.suburb || 
+                          addr.municipality || addr.county || 'Unknown City';
+          console.log('✅ Nominatim reverse geocode success:', {
+            city: cityName,
+            state: addr.state,
+            country: addr.country,
+            fullAddress: nominatimData.display_name
+          });
           return {
             latitude: lat,
             longitude: lon,
-            city: location.name || 'Unknown City',
-            state: location.state || '',
-            country: location.country || 'Unknown Country',
+            city: cityName,
+            state: addr.state || addr.state_district || '',
+            country: addr.country || 'Unknown Country',
+            address: nominatimData.display_name,
             isManual: false,
             timestamp: Date.now()
           };
         } else {
-          throw new Error('OpenWeatherMap returned no data');
+          throw new Error('Nominatim returned no address data');
         }
-      } catch (owmError) {
-        console.warn('⚠️ OpenWeatherMap geocoding failed, trying Nominatim...', owmError);
+      } catch (nominatimError) {
+        console.warn('⚠️ Nominatim geocoding failed, trying OpenWeatherMap...', nominatimError);
         
-        // Fallback 1: Try Nominatim (OpenStreetMap)
+        // Fallback 1: Try OpenWeatherMap
         try {
-          const nominatimResponse = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`,
-            {
-              headers: {
-                'User-Agent': 'AlertAid-DisasterApp/1.0'
-              }
-            }
+          const API_KEY = '1801423b3942e324ab80f5b47afe0859';
+          const response = await fetch(
+            `https://api.openweathermap.org/geo/1.0/reverse?lat=${lat}&lon=${lon}&limit=1&appid=${API_KEY}`
           );
           
-          if (!nominatimResponse.ok) {
-            throw new Error(`Nominatim geocoding failed: ${nominatimResponse.status}`);
+          if (!response.ok) {
+            throw new Error(`OpenWeatherMap geocoding failed: ${response.status}`);
           }
           
-          const nominatimData = await nominatimResponse.json();
+          const data = await response.json();
           
-          if (nominatimData && nominatimData.address) {
-            const addr = nominatimData.address;
-            console.log('✅ Nominatim reverse geocode success:', addr.city || addr.town || addr.village);
+          if (data && data.length > 0) {
+            const location = data[0];
+            console.log('✅ OpenWeatherMap reverse geocode success:', location.name);
             return {
               latitude: lat,
               longitude: lon,
-              city: addr.city || addr.town || addr.village || addr.county || 'Unknown City',
-              state: addr.state || '',
-              country: addr.country || 'Unknown Country',
+              city: location.name || 'Unknown City',
+              state: location.state || '',
+              country: location.country || 'Unknown Country',
               isManual: false,
               timestamp: Date.now()
             };
           } else {
-            throw new Error('Nominatim returned no address data');
+            throw new Error('OpenWeatherMap returned no data');
           }
-        } catch (nominatimError) {
-          console.warn('⚠️ Nominatim geocoding failed, trying BigDataCloud...', nominatimError);
+        } catch (owmError) {
+          console.warn('⚠️ OpenWeatherMap geocoding failed, trying BigDataCloud...', owmError);
           
           // Fallback 2: Try BigDataCloud (free, no API key required)
           try {
