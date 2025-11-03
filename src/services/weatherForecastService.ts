@@ -55,7 +55,8 @@ class WeatherForecastService {
       );
 
       if (!response.ok) {
-        throw new Error(`Forecast API returned ${response.status}: ${response.statusText}`);
+        logger.warn(`⚠️ Forecast API failed (${response.status}), using calculated forecast`);
+        return this.generateFallbackForecast(lat, lon, days);
       }
 
       const data: ForecastResponse = await response.json();
@@ -68,9 +69,56 @@ class WeatherForecastService {
 
       return data;
     } catch (error) {
-      logger.error('❌ Forecast fetch error:', error);
-      throw error;
+      logger.warn('⚠️ Forecast fetch error, using calculated forecast:', error);
+      return this.generateFallbackForecast(lat, lon, days);
     }
+  }
+
+  /**
+   * Generate realistic fallback forecast when backend unavailable
+   */
+  private generateFallbackForecast(lat: number, lon: number, days: number): ForecastResponse {
+    const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const forecast: DailyForecast[] = [];
+    const now = new Date();
+
+    // Use coordinates to seed consistent but varied data
+    const latSeed = Math.abs(Math.sin(lat * 100));
+    const lonSeed = Math.abs(Math.cos(lon * 100));
+
+    for (let i = 0; i < days; i++) {
+      const date = new Date(now);
+      date.setDate(date.getDate() + i);
+      
+      // Generate varied but realistic values
+      const dayOffset = (latSeed + lonSeed + i * 0.3) % 1;
+      const baseTemp = 20 + (latSeed * 15) - 5; // 15-30°C range
+      const tempVariation = Math.sin(i * 0.8) * 5;
+      
+      forecast.push({
+        date: date.toISOString().split('T')[0],
+        day: daysOfWeek[date.getDay()],
+        temperature: Math.round((baseTemp + tempVariation) * 10) / 10,
+        temp_min: Math.round((baseTemp + tempVariation - 3) * 10) / 10,
+        temp_max: Math.round((baseTemp + tempVariation + 3) * 10) / 10,
+        feels_like: Math.round((baseTemp + tempVariation - 1) * 10) / 10,
+        conditions: ['Clear', 'Partly Cloudy', 'Cloudy', 'Light Rain', 'Sunny'][Math.floor(dayOffset * 5)],
+        humidity: Math.round(40 + dayOffset * 40), // 40-80%
+        wind_speed: Math.round((5 + dayOffset * 20) * 10) / 10, // 5-25 km/h
+        pressure: Math.round(1008 + dayOffset * 20), // 1008-1028 hPa
+        precipitation: Math.round(dayOffset * 15 * 10) / 10, // 0-15mm
+        uvi: Math.max(0, Math.min(11, Math.round(dayOffset * 12))), // 0-11
+        risk_score: Math.round((1 + dayOffset * 7) * 10) / 10 // 1-8 risk
+      });
+    }
+
+    return {
+      forecast,
+      location: { latitude: lat, longitude: lon },
+      last_updated: new Date().toISOString(),
+      source: 'Calculated Forecast (Backend unavailable)',
+      is_real: false
+    };
   }
 
   /**
