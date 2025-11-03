@@ -82,11 +82,29 @@ export const GeolocationProvider: React.FC<GeolocationProviderProps> = ({ childr
     }
   }, []);
 
+  // Listen for location changes from other components (like NavigationBar)
+  useEffect(() => {
+    const handleLocationChange = (event: any) => {
+      console.log('📍 GeolocationManager detected location change from external source:', event.detail);
+      if (event.detail) {
+        setLocation(event.detail);
+        setError(null);
+      }
+    };
+
+    window.addEventListener('location-changed', handleLocationChange);
+    
+    return () => {
+      window.removeEventListener('location-changed', handleLocationChange);
+    };
+  }, []);
+
   const requestLocation = useCallback(() => {
     setShowPermissionModal(true);
   }, []);
 
   const handleLocationGranted = useCallback((locationData: LocationData) => {
+    console.log('📍 GeolocationManager: Location granted', locationData);
     setLocation(locationData);
     setShowPermissionModal(false);
     setShowManualInput(false);
@@ -94,6 +112,9 @@ export const GeolocationProvider: React.FC<GeolocationProviderProps> = ({ childr
     
     // Mark that user has been prompted
     localStorage.setItem('alertaid-location-prompted', 'true');
+    
+    // Broadcast location change event
+    window.dispatchEvent(new CustomEvent('location-changed', { detail: locationData }));
     
     // Show success notification
     addNotification({

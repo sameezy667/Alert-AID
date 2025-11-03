@@ -358,7 +358,25 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
       setIsGPSEnabled(location.source === 'gps'); // Check if GPS was used
       setIsLive(true); // Set to live on successful update
       setLastUpdated(new Date());
+      
+      // Save to both localStorage locations
+      const locationData = {
+        ...location,
+        timestamp: Date.now()
+      };
+      localStorage.setItem('enhanced-location-cache', JSON.stringify(locationData));
+      localStorage.setItem('alertaid-location', JSON.stringify(locationData));
+      
       console.log('📍 Location updated:', displayString, location);
+      
+      // Broadcast location change event to all components
+      console.log('📡 Broadcasting location-changed event from auto-update...');
+      window.dispatchEvent(new CustomEvent('location-changed', { detail: locationData }));
+      
+      // Dispatch again after delay to catch any late listeners
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('location-changed', { detail: locationData }));
+      }, 100);
     } catch (error) {
       console.error('Location update failed:', error);
       setLocationString('Location unavailable');
@@ -401,7 +419,7 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
     setLastUpdated(new Date());
     setShowManualLocationModal(false);
     
-    // Save to localStorage for persistence
+    // Save to localStorage for persistence in BOTH locations
     const locationData = {
       latitude: location.latitude,
       longitude: location.longitude,
@@ -409,15 +427,25 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
       state: '',
       country: location.country || '',
       source: 'manual',
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      isManual: true
     };
     
+    // Save to both cache locations
     localStorage.setItem('enhanced-location-cache', JSON.stringify(locationData));
+    localStorage.setItem('alertaid-location', JSON.stringify(locationData));
+    localStorage.setItem('alertaid-location-prompted', 'granted');
     
-    // Dispatch event for other components
+    console.log('📍 Manual location set and saved to localStorage:', locationData);
+    
+    // Dispatch event for ALL components to refresh their data
+    console.log('📡 Broadcasting location-changed event...');
     window.dispatchEvent(new CustomEvent('location-changed', { detail: locationData }));
     
-    console.log('📍 Manual location set:', locationData);
+    // Small delay then dispatch again to ensure all listeners catch it
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('location-changed', { detail: locationData }));
+    }, 100);
   }, []);
 
   return (

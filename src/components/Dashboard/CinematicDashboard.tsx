@@ -263,27 +263,42 @@ const CinematicDashboard: React.FC = () => {
     }
   };
 
-  // Listen for location changes and refresh data
+  // Listen for location changes and refresh data IMMEDIATELY
   useEffect(() => {
     const handleLocationChange = (event: any) => {
-      console.log('🔄 Location changed, refreshing dashboard data...', event.detail);
-      // Small delay to ensure location state is updated
+      console.log('🔄 Location changed event received, force refreshing ALL data...', event.detail);
+      
+      // Update enhanced location immediately
+      if (event.detail) {
+        setEnhancedLocation(event.detail);
+      }
+      
+      // Clear old dashboard data to show loading state
+      setDashboardData(null);
+      setLoading(true);
+      
+      // Force a complete data refresh with new location
       setTimeout(() => {
         fetchDashboardData();
-      }, 100);
+      }, 200);
     };
 
+    // Add event listener
     window.addEventListener('location-changed', handleLocationChange);
     
+    // Cleanup
     return () => {
       window.removeEventListener('location-changed', handleLocationChange);
     };
-  }, [location]);
+  }, []);
 
+  // Initial data fetch when location is available
   useEffect(() => {
     if (!location) return;
     
+    console.log('📍 Location updated in CinematicDashboard:', location);
     fetchDashboardData();
+    
     // Refresh data every 5 minutes
     const interval = setInterval(fetchDashboardData, 5 * 60 * 1000);
     return () => clearInterval(interval);
