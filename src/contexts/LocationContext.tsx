@@ -78,31 +78,40 @@ export const LocationProvider: React.FC<LocationProviderProps> = ({ children }) 
         
         // Request fresh geolocation
         if ('geolocation' in navigator) {
-          console.log('📍 Requesting live browser geolocation...');
+          console.log('📍 LocationContext: Requesting live browser geolocation...');
           
           navigator.geolocation.getCurrentPosition(
             async (position) => {
               const lat = position.coords.latitude;
               const lon = position.coords.longitude;
               
-              console.log(`✅ Got live location: ${lat}, ${lon}`);
+              console.log(`✅ LocationContext: Got live GPS location: ${lat}, ${lon}`);
               
               // Reverse geocode to get city, state, country
               const locationData = await reverseGeocode(lat, lon);
+              
+              console.log('📍 LocationContext: Reverse geocoded to:', locationData);
               
               setCurrentLocation(locationData);
               setIsLocationLoaded(true);
               setShowLocationModal(false);
               
-              // Save to localStorage with timestamp
+              // Save to BOTH localStorage locations
               localStorage.setItem('alertaid-location', JSON.stringify(locationData));
+              localStorage.setItem('enhanced-location-cache', JSON.stringify(locationData));
               localStorage.setItem('alertaid-location-prompted', 'granted');
               
               // Trigger custom event
+              console.log('📡 LocationContext: Broadcasting location-changed event');
               window.dispatchEvent(new CustomEvent('location-changed', { detail: locationData }));
+              
+              // Dispatch again to ensure all listeners catch it
+              setTimeout(() => {
+                window.dispatchEvent(new CustomEvent('location-changed', { detail: locationData }));
+              }, 100);
             },
             (error) => {
-              console.warn('❌ Geolocation denied or failed:', error.message);
+              console.warn('❌ LocationContext: Geolocation denied or failed:', error.message);
               
               // Mark as denied
               localStorage.setItem('alertaid-location-prompted', 'denied');
@@ -111,6 +120,7 @@ export const LocationProvider: React.FC<LocationProviderProps> = ({ children }) 
               if (savedLocation) {
                 try {
                   const locationData: LocationData = JSON.parse(savedLocation);
+                  console.log('📍 LocationContext: Using saved location fallback');
                   setCurrentLocation(locationData);
                   setIsLocationLoaded(true);
                 } catch (e) {
@@ -123,7 +133,7 @@ export const LocationProvider: React.FC<LocationProviderProps> = ({ children }) 
             },
             {
               enableHighAccuracy: true,
-              timeout: 8000,
+              timeout: 10000,
               maximumAge: 0 // Never use cached position
             }
           );
