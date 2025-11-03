@@ -91,10 +91,11 @@ class BackendConnectivityService {
       diagnostics.backend.status = 'connected';
       
       // Test individual endpoints from system verification response
+      // Skip testing template URLs (those with {lat}/{lon} placeholders)
+      // Use testIndividualEndpoints instead which has proper coordinates
       if (response.api_endpoints) {
-        for (const [endpoint, url] of Object.entries(response.api_endpoints)) {
-          diagnostics.backend.endpoints[endpoint] = await this.testEndpoint(url);
-        }
+        // Just log the endpoints, don't test template strings
+        console.log('✅ Backend endpoints available:', Object.keys(response.api_endpoints));
       }
       
     } catch (error) {
@@ -113,21 +114,21 @@ class BackendConnectivityService {
     const testLon = 75.562645;
     
     const endpoints = {
-      health: `${baseUrl}/api/health`,
-      weather: `${baseUrl}/api/weather/${testLat}/${testLon}`,
-      alerts: `${baseUrl}/api/alerts?lat=${testLat}&lon=${testLon}`,
+      health: { url: `${baseUrl}/api/health`, method: 'GET' },
+      weather: { url: `${baseUrl}/api/weather/${testLat}/${testLon}`, method: 'GET' },
+      alerts: { url: `${baseUrl}/api/alerts?lat=${testLat}&lon=${testLon}`, method: 'GET' },
     };
 
-    for (const [name, url] of Object.entries(endpoints)) {
-      diagnostics.backend.endpoints[name] = await this.testEndpoint(url);
+    for (const [name, config] of Object.entries(endpoints)) {
+      diagnostics.backend.endpoints[name] = await this.testEndpoint(config.url, config.method);
     }
   }
 
-  private async testEndpoint(url: string): Promise<{ available: boolean; response_time: number; error?: string }> {
+  private async testEndpoint(url: string, method: string = 'GET'): Promise<{ available: boolean; response_time: number; error?: string }> {
     try {
       const startTime = Date.now();
       const response = await fetch(url, {
-        method: 'GET',
+        method: method,
         timeout: 5000,
         headers: {
           'Content-Type': 'application/json',
