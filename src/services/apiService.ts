@@ -174,9 +174,17 @@ export class AlertAidAPIService {
     return apiRequest<{ status: string; services: any }>(`${API_PREFIX}/health`);
   }
 
-  // Get location info from coordinates - matches /api/location/{lat}/{lon}
+  // Get location info from coordinates - DEPRECATED: Backend doesn't have this endpoint
+  // Use OpenWeatherMap reverse geocoding instead
   static async getLocationInfo(lat: number, lon: number): Promise<any> {
-    return apiRequest<any>(`${API_PREFIX}/location/${lat}/${lon}`);
+    try {
+      // This endpoint doesn't exist on backend, will always fail
+      // Keeping for backwards compatibility but catching silently
+      return await apiRequest<any>(`${API_PREFIX}/location/${lat}/${lon}`, {}, true);
+    } catch (error) {
+      // Expected to fail, return null to trigger fallback
+      return null;
+    }
   }
 
   // Enhanced weather service with comprehensive retry logic and fallback
@@ -726,11 +734,11 @@ export const verifySystemStatus = async (): Promise<SystemVerificationResponse> 
       location: 'Jaipur, India'
     },
     api_endpoints: {
-      weather: `${API_BASE_URL}${API_PREFIX}/weather`,
-      prediction: `${API_BASE_URL}${API_PREFIX}/predict`,
+      weather: `${API_BASE_URL}${API_PREFIX}/weather/{lat}/{lon}`,
+      prediction: `${API_BASE_URL}${API_PREFIX}/predict/disaster`,
       alerts: `${API_BASE_URL}${API_PREFIX}/alerts`,
-      earthquakes: `${API_BASE_URL}${API_PREFIX}/earthquakes`,
-      location: `${API_BASE_URL}${API_PREFIX}/location`
+      earthquakes: `${API_BASE_URL}${API_PREFIX}/external/earthquakes/recent`,
+      location: 'Not available - use weather data for location info'
     }
   };
 };
