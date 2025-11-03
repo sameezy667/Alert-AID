@@ -18,7 +18,6 @@ import {
 } from '../../styles/production-ui-system';
 import { backendConnectivityService, ConnectivityDiagnostics } from '../../services/backendConnectivityService';
 import { SystemStatusBadge } from '../common/StatusBadges';
-import { EnvironmentDebugger } from './EnvironmentDebugger';
 
 const DiagnosticsContainer = styled.div`
   display: flex;
@@ -485,9 +484,6 @@ const SystemDiagnostics: React.FC = () => {
         <Clock size={12} />
         Last checked: {lastUpdate.toLocaleTimeString()}
       </LastUpdated>
-      
-      {/* Environment Debug Panel - Shows what API URL is actually being used */}
-      <EnvironmentDebugger />
     </DiagnosticsContainer>
   );
 };

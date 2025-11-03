@@ -55,6 +55,7 @@ const AirQualityWidget: React.FC<AirQualityWidgetProps> = ({ aqiData, loading })
       <AQIBadge gradient={getAQIGradient(aqiData.aqi)}>
         <AQINumber>{aqiData.aqi}</AQINumber>
         <AQILevel>{aqiData.level}</AQILevel>
+        <AQIScale>Scale: 1 (Best) - 5 (Worst)</AQIScale>
       </AQIBadge>
 
       <Description>{aqiData.description}</Description>
@@ -94,12 +95,12 @@ const AirQualityWidget: React.FC<AirQualityWidgetProps> = ({ aqiData, loading })
 
 // Styled Components
 const Widget = styled.div`
-  background: linear-gradient(135deg, rgba(26, 26, 46, 0.95) 0%, rgba(22, 33, 62, 0.95) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(135deg, rgba(10, 10, 10, 0.95) 0%, rgba(20, 20, 20, 0.95) 100%);
+  border: 1px solid rgba(220, 38, 38, 0.3);
   border-radius: 16px;
   padding: 24px;
   backdrop-filter: blur(10px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 32px rgba(220, 38, 38, 0.2);
 `;
 
 const Header = styled.div`
@@ -115,9 +116,9 @@ const Icon = styled.div`
   justify-content: center;
   width: 40px;
   height: 40px;
-  background: rgba(102, 126, 234, 0.2);
+  background: rgba(220, 38, 38, 0.2);
   border-radius: 10px;
-  color: #667eea;
+  color: #ef4444;
 `;
 
 const Title = styled.h3`
@@ -164,6 +165,14 @@ const AQILevel = styled.div`
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 1px;
+  margin-bottom: 8px;
+`;
+
+const AQIScale = styled.div`
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  font-weight: 500;
+  font-style: italic;
 `;
 
 const Description = styled.p`
@@ -182,10 +191,16 @@ const PollutantsGrid = styled.div`
 `;
 
 const Pollutant = styled.div`
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(10, 10, 10, 0.6);
+  border: 1px solid rgba(220, 38, 38, 0.2);
   border-radius: 10px;
   padding: 12px;
+  transition: all 0.3s ease;
+
+  &:hover {
+    border-color: rgba(220, 38, 38, 0.4);
+    background: rgba(20, 20, 20, 0.8);
+  }
 `;
 
 const PollutantName = styled.div`
