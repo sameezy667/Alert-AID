@@ -73,7 +73,24 @@ export function useDashboard() {
           setIsEnhancingLocation(false);
         });
     }
-  }, [location, isEnhancingLocation]);
+  }, [location]);
+
+  // Listen for location changes from other sources
+  useEffect(() => {
+    const handleLocationChange = (event: any) => {
+      console.log('🔄 Dashboard detected location change:', event.detail);
+      // Force refresh of all data with new location
+      if (event.detail) {
+        setIsEnhancingLocation(false); // Reset to allow re-enhancement
+      }
+    };
+
+    window.addEventListener('location-changed', handleLocationChange);
+    
+    return () => {
+      window.removeEventListener('location-changed', handleLocationChange);
+    };
+  }, []);
   const {
     riskPrediction,
     weather,

@@ -17,10 +17,11 @@ import MapCard from './cards/MapCard';
 
 const DashboardContainer = styled.div`
   min-height: 100vh;
+  width: 100%;
   background: #0F1115;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   color: #F7FAFC;
-  font-size: 17px;
+  font-size: clamp(14px, 2vw, 17px);
   line-height: 1.6;
   font-weight: 400;
   overflow-x: hidden;
@@ -29,39 +30,67 @@ const DashboardContainer = styled.div`
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  
+  /* Mobile optimizations */
+  @media (max-width: 768px) {
+    font-size: 15px;
+  }
 `;
 
 const DashboardGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-  gap: 32px;
-  padding: 32px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 350px), 1fr));
+  gap: clamp(16px, 3vw, 32px);
+  padding: clamp(16px, 4vw, 32px);
   max-width: 1920px;
   margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
   
-  @media (max-width: 768px) {
+  /* Mobile first - single column */
+  @media (max-width: 640px) {
     grid-template-columns: 1fr;
-    gap: 24px;
-    padding: 24px 16px;
+    gap: 16px;
+    padding: 16px 12px;
   }
   
-  @media (min-width: 768px) and (max-width: 1024px) {
+  /* Small tablets - 1-2 columns */
+  @media (min-width: 641px) and (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    padding: 20px 16px;
+  }
+  
+  /* Tablets - 2 columns */
+  @media (min-width: 769px) and (max-width: 1024px) {
     grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    padding: 24px;
+  }
+  
+  /* Small desktop - 2-3 columns */
+  @media (min-width: 1025px) and (max-width: 1280px) {
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
     gap: 28px;
     padding: 28px;
   }
   
-  @media (min-width: 1024px) and (max-width: 1440px) {
+  /* Medium desktop - 3 columns */
+  @media (min-width: 1281px) and (max-width: 1440px) {
     grid-template-columns: repeat(3, 1fr);
     gap: 32px;
+    padding: 32px;
   }
   
-  @media (min-width: 1440px) {
-    grid-template-columns: repeat(3, 1fr);
+  /* Large desktop - 3-4 columns */
+  @media (min-width: 1441px) and (max-width: 1920px) {
+    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
     gap: 32px;
+    padding: 32px;
   }
   
-  @media (min-width: 1920px) {
+  /* Extra large - 4+ columns */
+  @media (min-width: 1921px) {
     grid-template-columns: repeat(4, 1fr);
     gap: 40px;
     padding: 40px;
@@ -76,15 +105,21 @@ const LoadingOverlay = styled.div`
   bottom: 0;
   background: rgba(15, 17, 21, 0.95);
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   z-index: 1000;
   backdrop-filter: blur(10px);
+  padding: 20px;
+  
+  @media (max-width: 768px) {
+    padding: 16px;
+  }
 `;
 
 const LoadingSpinner = styled.div`
-  width: 60px;
-  height: 60px;
+  width: clamp(50px, 10vw, 60px);
+  height: clamp(50px, 10vw, 60px);
   border: 3px solid #2d3748;
   border-top: 3px solid #4fd1c7;
   border-radius: 50%;
@@ -93,6 +128,10 @@ const LoadingSpinner = styled.div`
   @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+  }
+  
+  @media (max-width: 768px) {
+    border-width: 2px;
   }
 `;
 
@@ -224,7 +263,26 @@ const CinematicDashboard: React.FC = () => {
     }
   };
 
+  // Listen for location changes and refresh data
   useEffect(() => {
+    const handleLocationChange = (event: any) => {
+      console.log('🔄 Location changed, refreshing dashboard data...', event.detail);
+      // Small delay to ensure location state is updated
+      setTimeout(() => {
+        fetchDashboardData();
+      }, 100);
+    };
+
+    window.addEventListener('location-changed', handleLocationChange);
+    
+    return () => {
+      window.removeEventListener('location-changed', handleLocationChange);
+    };
+  }, [location]);
+
+  useEffect(() => {
+    if (!location) return;
+    
     fetchDashboardData();
     // Refresh data every 5 minutes
     const interval = setInterval(fetchDashboardData, 5 * 60 * 1000);
@@ -305,30 +363,32 @@ const CinematicDashboard: React.FC = () => {
           flexDirection: 'column',
           alignItems: 'center', 
           justifyContent: 'center', 
-          height: 'calc(100vh - 80px)',
-          gap: '2rem',
-          padding: '2rem'
+          minHeight: 'calc(100vh - 80px)',
+          gap: 'clamp(1rem, 3vw, 2rem)',
+          padding: 'clamp(1rem, 4vw, 2rem)'
         }}>
           <div style={{
-            fontSize: '1.2rem',
+            fontSize: 'clamp(1rem, 2.5vw, 1.2rem)',
             color: '#FC8181',
             textAlign: 'center',
-            maxWidth: '600px'
+            maxWidth: '600px',
+            lineHeight: '1.6'
           }}>
             {error}
           </div>
           <button
             onClick={handleRefresh}
             style={{
-              padding: '12px 24px',
+              padding: 'clamp(10px, 2vw, 12px) clamp(20px, 4vw, 24px)',
               background: 'linear-gradient(135deg, #4FD1C7 0%, #38B2AC 100%)',
               border: 'none',
               borderRadius: '12px',
               color: 'white',
-              fontSize: '16px',
+              fontSize: 'clamp(14px, 2vw, 16px)',
               fontWeight: '600',
               cursor: 'pointer',
-              transition: 'transform 0.2s ease'
+              transition: 'transform 0.2s ease',
+              touchAction: 'manipulation'
             }}
             onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
             onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}

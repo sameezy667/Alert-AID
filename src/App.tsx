@@ -42,31 +42,26 @@ const SkipToContent = styled.a`
   }
 `;
 
-// Clear ALL location caches on app load to force Jaipur default
-const clearStaleCaches = () => {
+// Utility function to clean up old/invalid location caches (runs only when needed)
+const cleanupInvalidCaches = () => {
   try {
-    // ALWAYS clear location cache to ensure Jaipur is used
-    logger.log('🗑️ Clearing all location caches to use Jaipur default...');
-    localStorage.removeItem('enhanced-location-cache');
-    localStorage.removeItem('location-override');
+    // Only remove clearly invalid or corrupted cache entries
+    const keysToCheck = ['enhanced-location-cache', 'location-override'];
     
-    // Clear any old cached location data
-    const keysToRemove: string[] = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && key.includes('location')) {
-        keysToRemove.push(key);
+    keysToCheck.forEach(key => {
+      const value = localStorage.getItem(key);
+      if (value) {
+        try {
+          JSON.parse(value);
+        } catch (e) {
+          // Remove corrupted cache
+          logger.warn(`Removing corrupted cache: ${key}`);
+          localStorage.removeItem(key);
+        }
       }
-    }
-    
-    keysToRemove.forEach(key => {
-      localStorage.removeItem(key);
-      logger.log(`✅ Cleared: ${key}`);
     });
-    
-    logger.log('✅ Cache cleared - will use Jaipur, India as default');
   } catch (error) {
-    logger.warn('Failed to clear caches:', error);
+    logger.warn('Failed to cleanup caches:', error);
   }
 };
 
@@ -110,10 +105,10 @@ const AppContent: React.FC = () => {
 };
 
 function App() {
-  // Clear stale caches on mount to ensure fresh data
+  // Clean up invalid caches only on mount (not clearing valid data)
   useEffect(() => {
-    clearStaleCaches();
-    logger.log('✅ Cache cleared - ready for fresh location data');
+    cleanupInvalidCaches();
+    logger.log('✅ App mounted - location will be managed by LocationProvider');
   }, []);
 
   return (

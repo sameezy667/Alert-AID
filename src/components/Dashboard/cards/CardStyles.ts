@@ -92,14 +92,17 @@ export const Card = styled.div<{
   }};
   
   border: 1px solid ${colors.borderLight};
-  border-radius: 16px;
+  border-radius: clamp(12px, 2vw, 16px);
   padding: ${props => {
     switch (props.size) {
-      case 'small': return '1.5rem';
-      case 'large': return '3rem';
-      default: return '2rem';
+      case 'small': return 'clamp(1rem, 2vw, 1.5rem)';
+      case 'large': return 'clamp(1.5rem, 3vw, 3rem)';
+      default: return 'clamp(1.25rem, 2.5vw, 2rem)';
     }
   }};
+  
+  width: 100%;
+  box-sizing: border-box;
   
   /* Enhanced shadow system */
   box-shadow: 
@@ -120,21 +123,41 @@ export const Card = styled.div<{
   
   transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
   
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: 
-      0 12px 48px rgba(0, 0, 0, 0.6),
-      0 0 0 1px rgba(255, 255, 255, 0.1),
-      inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  /* Desktop hover effects */
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow: 
+        0 12px 48px rgba(0, 0, 0, 0.6),
+        0 0 0 1px rgba(255, 255, 255, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
   }
   
-  /* Responsive sizing */
-  @media (max-width: 768px) {
+  /* Mobile optimizations */
+  @media (max-width: 640px) {
+    border-radius: 12px;
     padding: ${props => {
       switch (props.size) {
         case 'small': return '1rem';
+        case 'large': return '1.5rem';
+        default: return '1.25rem';
+      }
+    }};
+    
+    /* Reduce shadows on mobile for better performance */
+    box-shadow: 
+      0 4px 16px rgba(0, 0, 0, 0.4),
+      0 0 0 1px rgba(255, 255, 255, 0.05);
+  }
+  
+  /* Tablet optimization */
+  @media (min-width: 641px) and (max-width: 1024px) {
+    padding: ${props => {
+      switch (props.size) {
+        case 'small': return '1.25rem';
         case 'large': return '2rem';
-        default: return '1.5rem';
+        default: return '1.75rem';
       }
     }};
   }
@@ -144,44 +167,73 @@ export const CardHeader = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1.5rem;
+  margin-bottom: clamp(1rem, 2vw, 1.5rem);
+  gap: 0.75rem;
+  flex-wrap: wrap;
   
   h3 {
     margin: 0;
-    font-size: 1.1rem;
+    font-size: clamp(1rem, 2vw, 1.1rem);
     font-weight: 600;
     color: #e2e8f0;
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    flex: 1;
+    min-width: 0; /* Allows text to wrap */
+  }
+  
+  @media (max-width: 640px) {
+    margin-bottom: 1rem;
+    
+    h3 {
+      font-size: 0.95rem;
+    }
   }
 `;
 
 export const CardContent = styled.div`
   color: #cbd5e0;
   line-height: 1.6;
+  width: 100%;
+  overflow: hidden;
 `;
 
 export const MetricValue = styled.div<{ size?: 'small' | 'medium' | 'large' }>`
   font-size: ${props => {
     switch (props.size) {
-      case 'small': return '1.5rem';
-      case 'large': return '3rem';
-      default: return '2.5rem';
+      case 'small': return 'clamp(1.25rem, 3vw, 1.5rem)';
+      case 'large': return 'clamp(2rem, 5vw, 3rem)';
+      default: return 'clamp(1.75rem, 4vw, 2.5rem)';
     }
   }};
   font-weight: 700;
   color: #e2e8f0;
-  line-height: 1;
+  line-height: 1.2;
   margin-bottom: 0.5rem;
+  
+  @media (max-width: 640px) {
+    font-size: ${props => {
+      switch (props.size) {
+        case 'small': return '1.25rem';
+        case 'large': return '2rem';
+        default: return '1.75rem';
+      }
+    }};
+  }
 `;
 
 export const MetricLabel = styled.div`
-  font-size: 0.9rem;
+  font-size: clamp(0.75rem, 1.5vw, 0.9rem);
   color: #a0aec0;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   font-weight: 500;
+  
+  @media (max-width: 640px) {
+    font-size: 0.75rem;
+    letter-spacing: 0.3px;
+  }
 `;
 
 export const Badge = styled.span<{ variant?: 'success' | 'warning' | 'danger' | 'info' }>`

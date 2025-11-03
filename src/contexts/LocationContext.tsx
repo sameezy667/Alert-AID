@@ -32,14 +32,51 @@ export const LocationProvider: React.FC<LocationProviderProps> = ({ children }) 
   const [currentLocation, setCurrentLocation] = useState<LocationData | null>(null);
   const [isLocationLoaded, setIsLocationLoaded] = useState(false);
   const [showLocationModal, setShowLocationModal] = useState(false);
+  const [locationRequested, setLocationRequested] = useState(false);
 
-  // Check for existing location on app startup - ALWAYS REQUEST LIVE GEOLOCATION
+  // Check for existing location on app startup - Request location only once
   useEffect(() => {
+    // Prevent multiple location requests
+    if (locationRequested) return;
+    setLocationRequested(true);
+
     const checkExistingLocation = async () => {
       try {
         const savedLocation = localStorage.getItem('alertaid-location');
+        const locationPrompted = localStorage.getItem('alertaid-location-prompted');
         
-        // Always request fresh browser geolocation on load
+        // If we have a saved location that's less than 1 hour old, use it
+        if (savedLocation) {
+          try {
+            const locationData: LocationData = JSON.parse(savedLocation);
+            const age = Date.now() - (locationData.timestamp || 0);
+            
+            // Use cached location if less than 1 hour old
+            if (age < 60 * 60 * 1000) {
+              console.log('📍 Using cached location (less than 1 hour old)');
+              setCurrentLocation(locationData);
+              setIsLocationLoaded(true);
+              return;
+            }
+          } catch (e) {
+            console.warn('Failed to parse saved location:', e);
+          }
+        }
+        
+        // If user was already prompted and denied, don't ask again this session
+        if (locationPrompted === 'denied') {
+          console.log('📍 User previously denied location access');
+          if (savedLocation) {
+            const locationData: LocationData = JSON.parse(savedLocation);
+            setCurrentLocation(locationData);
+            setIsLocationLoaded(true);
+          } else {
+            setShowLocationModal(true);
+          }
+          return;
+        }
+        
+        // Request fresh geolocation
         if ('geolocation' in navigator) {
           console.log('📍 Requesting live browser geolocation...');
           
@@ -57,8 +94,9 @@ export const LocationProvider: React.FC<LocationProviderProps> = ({ children }) 
               setIsLocationLoaded(true);
               setShowLocationModal(false);
               
-              // Save to localStorage
+              // Save to localStorage with timestamp
               localStorage.setItem('alertaid-location', JSON.stringify(locationData));
+              localStorage.setItem('alertaid-location-prompted', 'granted');
               
               // Trigger custom event
               window.dispatchEvent(new CustomEvent('location-changed', { detail: locationData }));
@@ -66,11 +104,18 @@ export const LocationProvider: React.FC<LocationProviderProps> = ({ children }) 
             (error) => {
               console.warn('❌ Geolocation denied or failed:', error.message);
               
+              // Mark as denied
+              localStorage.setItem('alertaid-location-prompted', 'denied');
+              
               // Fallback: use saved location if available
               if (savedLocation) {
-                const locationData: LocationData = JSON.parse(savedLocation);
-                setCurrentLocation(locationData);
-                setIsLocationLoaded(true);
+                try {
+                  const locationData: LocationData = JSON.parse(savedLocation);
+                  setCurrentLocation(locationData);
+                  setIsLocationLoaded(true);
+                } catch (e) {
+                  setShowLocationModal(true);
+                }
               } else {
                 // Show location modal for manual input
                 setShowLocationModal(true);
@@ -78,7 +123,7 @@ export const LocationProvider: React.FC<LocationProviderProps> = ({ children }) 
             },
             {
               enableHighAccuracy: true,
-              timeout: 10000,
+              timeout: 8000,
               maximumAge: 0 // Never use cached position
             }
           );
@@ -216,15 +261,25 @@ export const LocationProvider: React.FC<LocationProviderProps> = ({ children }) 
   }, []);
 
   const setLocation = (location: LocationData) => {
-    setCurrentLocation(location);
+    console.log('📍 Setting new location:', location);
+    
+    // Add timestamp if not present
+    const locationWithTimestamp = {
+      ...location,
+      timestamp: location.timestamp || Date.now()
+    };
+    
+    setCurrentLocation(locationWithTimestamp);
     setIsLocationLoaded(true);
     setShowLocationModal(false);
     
     // Save to localStorage
-    localStorage.setItem('alertaid-location', JSON.stringify(location));
+    localStorage.setItem('alertaid-location', JSON.stringify(locationWithTimestamp));
+    localStorage.setItem('alertaid-location-prompted', 'granted');
     
-    // Trigger custom event for other components
-    window.dispatchEvent(new CustomEvent('location-changed', { detail: location }));
+    // Trigger custom event for other components to refresh data
+    console.log('📡 Broadcasting location-changed event');
+    window.dispatchEvent(new CustomEvent('location-changed', { detail: locationWithTimestamp }));
   };
 
   const requestLocationChange = () => {

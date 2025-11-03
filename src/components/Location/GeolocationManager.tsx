@@ -42,34 +42,44 @@ export const GeolocationProvider: React.FC<GeolocationProviderProps> = ({ childr
     console.log('📍 Location modal state changed:', { showPermissionModal, showManualInput });
   }, [showPermissionModal, showManualInput]);
 
-  // Load existing location from localStorage on mount - with shorter cache duration
+  // Load existing location from localStorage on mount - with 1 hour cache
   useEffect(() => {
     const savedLocation = localStorage.getItem('alertaid-location');
+    const locationPrompted = localStorage.getItem('alertaid-location-prompted');
+    
     if (savedLocation) {
       try {
         const locationData = JSON.parse(savedLocation);
-        // Check if location is less than 15 minutes old (much shorter than 24 hours)
-        // This ensures we get fresh location data more frequently
-        if (Date.now() - locationData.timestamp < 15 * 60 * 1000) {
-          console.log('📍 Using cached location (less than 15 minutes old):', locationData);
+        // Check if location is less than 1 hour old
+        const age = Date.now() - (locationData.timestamp || 0);
+        if (age < 60 * 60 * 1000) {
+          console.log('📍 Using cached location (less than 1 hour old):', locationData);
           setLocation(locationData);
           return;
         } else {
-          console.log('📍 Cached location expired, requesting fresh location');
-          // Clear expired location data
-          localStorage.removeItem('alertaid-location');
+          console.log('📍 Cached location expired, will request fresh location');
         }
       } catch (error) {
         console.warn('Failed to parse saved location:', error);
-        localStorage.removeItem('alertaid-location');
       }
     }
     
-    // Always try to get fresh location if no valid cached data
-    console.log('🎯 Requesting fresh device location');
-    setTimeout(() => {
-      setShowPermissionModal(true);
-    }, 500);
+    // Only show modal if user hasn't been prompted in this session
+    if (!locationPrompted) {
+      console.log('🎯 Requesting fresh device location');
+      setTimeout(() => {
+        setShowPermissionModal(true);
+      }, 500);
+    } else if (savedLocation) {
+      // Use saved location even if stale
+      try {
+        const locationData = JSON.parse(savedLocation);
+        console.log('📍 Using saved location from previous session');
+        setLocation(locationData);
+      } catch (error) {
+        console.warn('Failed to parse saved location:', error);
+      }
+    }
   }, []);
 
   const requestLocation = useCallback(() => {
