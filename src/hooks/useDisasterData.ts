@@ -113,8 +113,8 @@ export const useDisasterData = (location: LocationData | null) => {
       const prediction = await AlertAidAPIService.predictDisasterRisk(locationData, true);
       setData(prev => ({ ...prev, riskPrediction: prediction }));
       
-      // Trigger notifications for high-risk predictions
-      if (typeof prediction.overall_risk === 'string' && (prediction.overall_risk === 'high' || prediction.overall_risk === 'critical')) {
+      // Only show notification if this is real data (backend is working)
+      if (prediction.is_real && typeof prediction.overall_risk === 'string' && (prediction.overall_risk === 'high' || prediction.overall_risk === 'critical')) {
         const severity = prediction.overall_risk === 'critical' ? 'critical' : 'high';
         addNotification({
           title: `${severity === 'critical' ? 'CRITICAL' : 'HIGH'} Risk Alert`,
@@ -123,8 +123,13 @@ export const useDisasterData = (location: LocationData | null) => {
           duration: severity === 'critical' ? 0 : 10000, // Critical alerts don't auto-dismiss
         });
       }
+      
+      // Clear any previous errors since we got data (even if fallback)
+      clearError('riskPrediction');
     } catch (error) {
-      handleApiError(error, 'riskPrediction');
+      console.error('riskPrediction error:', error);
+      // Don't call handleApiError to avoid showing error notifications
+      // The fallback data will be used instead
     } finally {
       setLoading(prev => ({ ...prev, riskPrediction: false }));
     }
