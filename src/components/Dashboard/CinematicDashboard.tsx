@@ -147,7 +147,8 @@ interface DashboardData {
 }
 
 const CinematicDashboard: React.FC = () => {
-  const { location, isLoading: locationLoading } = useGeolocation();
+  const { location: geolocation, isLoading: locationLoading } = useGeolocation();
+  const [currentLocation, setCurrentLocation] = useState<any>(null);
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -156,13 +157,27 @@ const CinematicDashboard: React.FC = () => {
   const [retryCount, setRetryCount] = useState(0);
   const [enhancedLocation, setEnhancedLocation] = useState<any>(null);
 
+  // Use currentLocation if available, otherwise fall back to geolocation
+  const location = currentLocation || geolocation;
+
   // Hoisted fetch function so handlers can call it (refresh, export, etc.)
   const fetchDashboardData = async () => {
-    if (!location) return;
+    if (!location) {
+      console.log('⚠️ No location available for data fetch');
+      return;
+    }
+    
+    console.log('📊 Fetching dashboard data for location:', location);
 
     try {
       setLoading(true);
       setError(null);
+
+      console.log('📡 Making API calls with coordinates:', {
+        lat: location.latitude,
+        lon: location.longitude,
+        city: location.city || 'unknown'
+      });
 
       const [weather, prediction, alerts, locationInfo] = await Promise.all([
         AlertAidAPIService.getWeatherData(location.latitude, location.longitude),
@@ -268,9 +283,11 @@ const CinematicDashboard: React.FC = () => {
     const handleLocationChange = (event: any) => {
       console.log('🔄 Location changed event received, force refreshing ALL data...', event.detail);
       
-      // Update enhanced location immediately
+      // Update BOTH enhanced location AND current location coordinates
       if (event.detail) {
         setEnhancedLocation(event.detail);
+        setCurrentLocation(event.detail); // This is KEY - update the location used for API calls
+        console.log('📍 Updated currentLocation to:', event.detail);
       }
       
       // Clear old dashboard data to show loading state
@@ -280,7 +297,7 @@ const CinematicDashboard: React.FC = () => {
       // Force a complete data refresh with new location
       setTimeout(() => {
         fetchDashboardData();
-      }, 200);
+      }, 300);
     };
 
     // Add event listener
@@ -290,13 +307,24 @@ const CinematicDashboard: React.FC = () => {
     return () => {
       window.removeEventListener('location-changed', handleLocationChange);
     };
-  }, []);
+  }, [location]);
+
+  // Sync currentLocation with geolocation when it first loads
+  useEffect(() => {
+    if (geolocation && !currentLocation) {
+      console.log('📍 Initial geolocation loaded:', geolocation);
+      setCurrentLocation(geolocation);
+    }
+  }, [geolocation, currentLocation]);
 
   // Initial data fetch when location is available
   useEffect(() => {
-    if (!location) return;
+    if (!location) {
+      console.log('⏳ Waiting for location to be available...');
+      return;
+    }
     
-    console.log('📍 Location updated in CinematicDashboard:', location);
+    console.log('📍 Location available, fetching data:', location);
     fetchDashboardData();
     
     // Refresh data every 5 minutes
