@@ -121,16 +121,8 @@ def initialize_ml_model():
 # Initialize ML model on startup
 initialize_ml_model()
 
-# Create FastAPI app with comprehensive metadata
-app = FastAPI(
-    title="Alert Aid API",
-    description="Professional disaster prediction and management API with real-time data integration",
-    version="1.0.0",
-    docs_url="/docs",
-    redoc_url="/redoc"
-)
-
-# CORS middleware already configured above - don't add duplicate!
+# CORS middleware already configured above at line 48-72 - don't add duplicate!
+# The app variable is already created at line 31 with CORS enabled
 
 # Register all API routes with proper prefixes
 app.include_router(health.router, prefix="/api", tags=["Health Check"])
