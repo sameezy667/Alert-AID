@@ -29,38 +29,17 @@ export interface SimpleWeatherData {
 
 export class SimpleWeatherService {
   /**
-   * Fetch weather data with automatic fallback
+   * Fetch weather data using free 2.5 API (3.0 requires paid subscription)
    */
   static async getWeather(lat: number, lon: number): Promise<SimpleWeatherData> {
     console.log(`🌤️ [SimpleWeatherService] Fetching weather for ${lat}, ${lon}`);
     
     try {
-      // Try One Call API 3.0 first (most comprehensive)
-      const oneCallUrl = `${ONE_CALL_API_URL}?lat=${lat}&lon=${lon}&appid=${OPENWEATHER_API_KEY}&units=metric&exclude=minutely,hourly,daily,alerts`;
-      console.log('🌐 [SimpleWeatherService] Trying One Call API 3.0:', oneCallUrl);
-      
-      const oneCallResponse = await fetch(oneCallUrl);
-      
-      if (oneCallResponse.ok) {
-        const data = await oneCallResponse.json();
-        console.log('✅ [SimpleWeatherService] One Call API 3.0 success:', data);
-        
-        // Add metadata
-        data.last_updated = new Date().toISOString();
-        data.is_real = true;
-        data.source = 'OpenWeatherMap One Call API 3.0';
-        
-        return data;
-      }
-      
-      console.warn('⚠️ [SimpleWeatherService] One Call API 3.0 failed, trying fallback...');
-      
-      // Fallback to current weather API 2.5
+      // Use Current Weather API 2.5 (free tier)
       return await this.getCurrentWeatherFallback(lat, lon);
-      
     } catch (error) {
       console.error('❌ [SimpleWeatherService] Error:', error);
-      return await this.getCurrentWeatherFallback(lat, lon);
+      throw error;
     }
   }
 

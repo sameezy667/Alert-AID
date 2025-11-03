@@ -458,6 +458,22 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
     }
   }, []);
 
+  // Clear all location caches and force fresh GPS location
+  const clearLocationCache = useCallback(() => {
+    console.log('🧹 Clearing all location caches...');
+    localStorage.removeItem('alertaid-location');
+    localStorage.removeItem('enhanced-location-cache');
+    localStorage.removeItem('alertaid-location-prompted');
+    setLocationString('Refreshing...');
+    setIsGPSEnabled(false);
+    setIsLive(false);
+    
+    // Trigger fresh GPS location after clearing
+    setTimeout(() => {
+      updateLocation();
+    }, 100);
+  }, [updateLocation]);
+
   // Initialize location on mount (but don't auto-refresh - let LocationContext handle it)
   useEffect(() => {
     // Only update if we don't have a valid location in localStorage

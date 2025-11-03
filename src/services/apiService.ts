@@ -286,7 +286,7 @@ export class AlertAidAPIService {
     };
   }
 
-  // Enhanced disaster risk prediction - matches /api/predict
+  // Enhanced disaster risk prediction - matches /api/predict/disaster
   static async predictDisasterRisk(
     location: LocationData,
     includeExternalData: boolean = true
@@ -298,7 +298,7 @@ export class AlertAidAPIService {
     };
     
     try {
-      return await apiRequest<DisasterRiskPrediction>(`${API_PREFIX}/predict`, {
+      return await apiRequest<DisasterRiskPrediction>(`${API_PREFIX}/predict/disaster`, {
         method: 'POST',
         body: JSON.stringify(request),
       }, true); // Silent errors - backend expected to be unavailable
