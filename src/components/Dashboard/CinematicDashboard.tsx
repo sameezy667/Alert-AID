@@ -146,11 +146,63 @@ interface DashboardData {
   evacuationRoutes: any[];
 }
 
+// Generate instant mock data for initial render
+const generateInstantMockData = (lat?: number, lon?: number): DashboardData => {
+  const temp = 20 + Math.random() * 10;
+  return {
+    weather: {
+      temperature: temp,
+      condition: 'Partly Cloudy',
+      humidity: 60,
+      windSpeed: 15,
+      pressure: 1013,
+      visibility: 10,
+      description: 'Loading...'
+    },
+    prediction: {
+      overall_risk: 30,
+      risk_level: 'Medium',
+      confidence: 0.75,
+      disaster_probabilities: {
+        earthquake: 20,
+        flood: 25,
+        fire: 15,
+        storm: 40
+      },
+      recommendations: ['Loading current recommendations...'],
+      is_real: false
+    },
+    alerts: {
+      alerts: [],
+      count: 0
+    },
+    location: {
+      city: 'Loading...',
+      state: '',
+      country: '',
+      source: 'Initial'
+    },
+    incidents: [],
+    resources: {
+      shelters: [],
+      hospitals: [],
+      emergencyServices: []
+    },
+    evacuation: {
+      routes: [],
+      zones: []
+    },
+    evacuationRoutes: []
+  };
+};
+
 const CinematicDashboard: React.FC = () => {
   const { location: geolocation, isLoading: locationLoading } = useGeolocation();
   const [currentLocation, setCurrentLocation] = useState<any>(null);
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(
+    generateInstantMockData() // Instant initial data
+  );
+  const [loading, setLoading] = useState(false); // Start with false since we have mock data
   const [error, setError] = useState<string | null>(null);
   const [systemStatus, setSystemStatus] = useState<'online' | 'offline' | 'degraded'>('online');
   const [lastUpdated, setLastUpdated] = useState<string>('');
@@ -170,63 +222,47 @@ const CinematicDashboard: React.FC = () => {
     console.log('📊 Fetching dashboard data for location:', location);
 
     try {
-      setLoading(true);
+      // Only show loading overlay if this is the first real data load
+      // (mock data will have 'Loading...' as city name)
+      const isFirstLoad = !dashboardData || dashboardData.location.city === 'Loading...';
+      if (isFirstLoad) {
+        setLoading(true);
+      }
       setError(null);
 
-      console.log('📡 Making API calls with coordinates:', {
-        lat: location.latitude,
-        lon: location.longitude,
-        city: location.city || 'unknown'
-      });
+      // Start timer for performance monitoring
+      const startTime = performance.now();
 
-      const [weather, prediction, alerts, locationInfo] = await Promise.all([
-        AlertAidAPIService.getWeatherData(location.latitude, location.longitude),
-        AlertAidAPIService.getPredictions(location.latitude, location.longitude),
-        AlertAidAPIService.getAlerts(location.latitude, location.longitude),
-        // Enhanced location detection with OpenWeatherMap reverse geocoding
-        (async () => {
-          try {
-            // Try backend first
-            const backendLocation = await AlertAidAPIService.getLocationInfo(location.latitude, location.longitude);
-            if (backendLocation) {
-              console.log('✅ Got location from backend');
-              return backendLocation;
-            }
-          } catch (error) {
-            console.warn('❌ Backend location fetch failed, trying OpenWeatherMap...');
-          }
-          
-          // Fallback to OpenWeatherMap reverse geocoding
-          try {
-            const owmLocation = await OpenWeatherMapService.reverseGeocode(location.latitude, location.longitude);
-            if (owmLocation) {
-              console.log('✅ Got location from OpenWeatherMap reverse geocoding');
-              return {
-                city: owmLocation.name,
-                state: owmLocation.state || '',
-                country: owmLocation.country,
-                latitude: owmLocation.lat,
-                longitude: owmLocation.lon,
-                source: 'OpenWeatherMap Geocoding',
-                is_real: true
-              };
-            }
-          } catch (owmError) {
-            console.warn('❌ OpenWeatherMap geocoding failed');
-          }
-          
-          // Final fallback
-          return {
-            city: 'Unknown Location',
-            state: '',
-            country: 'Unknown',
-            latitude: location.latitude,
-            longitude: location.longitude,
-            source: 'Coordinates Only',
-            is_real: false
-          };
-        })()
+      // Fetch only critical data in parallel (weather, prediction, alerts)
+      // Skip location geocoding since we already have location from LocationContext
+      const [weather, prediction, alerts] = await Promise.all([
+        AlertAidAPIService.getWeatherData(location.latitude, location.longitude).catch(err => {
+          console.warn('Weather fetch failed, using fallback');
+          return null;
+        }),
+        AlertAidAPIService.getPredictions(location.latitude, location.longitude).catch(err => {
+          console.warn('Prediction fetch failed, using fallback');
+          return null;
+        }),
+        AlertAidAPIService.getAlerts(location.latitude, location.longitude).catch(err => {
+          console.warn('Alerts fetch failed, using fallback');
+          return { alerts: [], count: 0 };
+        })
       ]);
+
+      const loadTime = performance.now() - startTime;
+      console.log(`✅ Dashboard data loaded in ${loadTime.toFixed(0)}ms`);
+
+      // Use existing location data (already geocoded by LocationContext)
+      const locationInfo = {
+        city: location.city || 'Unknown',
+        state: location.state || '',
+        country: location.country || 'Unknown',
+        latitude: location.latitude,
+        longitude: location.longitude,
+        source: 'LocationContext Cache',
+        is_real: true
+      };
 
       // Mock data for incidents and resources - replace with real API calls
       const incidents = [
@@ -281,7 +317,7 @@ const CinematicDashboard: React.FC = () => {
   // Listen for location changes and refresh data IMMEDIATELY
   useEffect(() => {
     const handleLocationChange = (event: any) => {
-      console.log('🔄 Location changed event received, force refreshing ALL data...', event.detail);
+      console.log('🔄 Location changed event received, refreshing data silently...', event.detail);
       
       // Update BOTH enhanced location AND current location coordinates
       if (event.detail) {
@@ -290,14 +326,21 @@ const CinematicDashboard: React.FC = () => {
         console.log('📍 Updated currentLocation to:', event.detail);
       }
       
-      // Clear old dashboard data to show loading state
-      setDashboardData(null);
-      setLoading(true);
+      // Keep current data visible, update location info immediately
+      setDashboardData(prev => prev ? {
+        ...prev,
+        location: {
+          city: event.detail?.city || 'Updating...',
+          state: event.detail?.state || '',
+          country: event.detail?.country || '',
+          source: 'LocationContext'
+        }
+      } : generateInstantMockData(event.detail?.lat, event.detail?.lon));
       
-      // Force a complete data refresh with new location
+      // Fetch new data in background without loading overlay
       setTimeout(() => {
         fetchDashboardData();
-      }, 300);
+      }, 100);
     };
 
     // Add event listener
@@ -324,10 +367,12 @@ const CinematicDashboard: React.FC = () => {
       return;
     }
     
-    console.log('📍 Location available, fetching data:', location);
+    console.log('📍 Location available, fetching real data in background:', location);
+    // Don't set loading to true - we already have mock data showing
+    // Just fetch real data silently in the background
     fetchDashboardData();
     
-    // Refresh data every 5 minutes
+    // Set up auto-refresh every 5 minutes
     const interval = setInterval(fetchDashboardData, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, [location]);
