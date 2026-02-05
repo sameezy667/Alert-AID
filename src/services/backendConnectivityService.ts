@@ -34,7 +34,7 @@ export interface ConnectivityDiagnostics {
 
 class BackendConnectivityService {
   private static instance: BackendConnectivityService;
-  
+
   static getInstance(): BackendConnectivityService {
     if (!BackendConnectivityService.instance) {
       BackendConnectivityService.instance = new BackendConnectivityService();
@@ -70,13 +70,13 @@ class BackendConnectivityService {
 
     // Test backend connectivity
     await this.testBackendConnectivity(diagnostics);
-    
+
     // Test external API connectivity
     await this.testExternalAPIs(diagnostics);
-    
+
     // Determine overall status and recommendations
     this.assessOverallStatus(diagnostics);
-    
+
     return diagnostics;
   }
 
@@ -85,11 +85,11 @@ class BackendConnectivityService {
       const startTime = Date.now();
       const response = await verifySystemStatus();
       const responseTime = Date.now() - startTime;
-      
+
       diagnostics.backend.reachable = true;
       diagnostics.backend.response_time = responseTime;
       diagnostics.backend.status = 'connected';
-      
+
       // Test individual endpoints from system verification response
       // Skip testing template URLs (those with {lat}/{lon} placeholders)
       // Use testIndividualEndpoints instead which has proper coordinates
@@ -97,11 +97,11 @@ class BackendConnectivityService {
         // Just log the endpoints, don't test template strings
         console.log('✅ Backend endpoints available:', Object.keys(response.api_endpoints));
       }
-      
+
     } catch (error) {
       diagnostics.backend.reachable = false;
       diagnostics.backend.status = `error: ${error instanceof Error ? error.message : 'Unknown error'}`;
-      
+
       // If backend is unreachable, test individual endpoints directly
       await this.testIndividualEndpoints(diagnostics);
     }
@@ -112,7 +112,7 @@ class BackendConnectivityService {
     // Use test coordinates for endpoints that require parameters
     const testLat = 26.8413685;
     const testLon = 75.562645;
-    
+
     const endpoints = {
       health: { url: `${baseUrl}/api/health`, method: 'GET' },
       weather: { url: `${baseUrl}/api/weather/${testLat}/${testLon}`, method: 'GET' },
@@ -134,9 +134,9 @@ class BackendConnectivityService {
           'Content-Type': 'application/json',
         }
       } as any);
-      
+
       const responseTime = Date.now() - startTime;
-      
+
       return {
         available: response.ok,
         response_time: responseTime,
@@ -160,9 +160,9 @@ class BackendConnectivityService {
         `https://api.openweathermap.org/data/2.5/weather?lat=40.7128&lon=-74.0060&appid=${apiKey}&units=metric`,
         { timeout: 10000 } as any
       );
-      
+
       const responseTime = Date.now() - startTime;
-      
+
       diagnostics.external_apis.openweathermap = {
         reachable: response.ok,
         response_time: responseTime,
@@ -181,9 +181,16 @@ class BackendConnectivityService {
     // Test IP Geolocation API
     try {
       const startTime = Date.now();
-      const response = await fetch('https://ipapi.co/json/', { timeout: 10000 } as any);
+      // Try ipwho.is first as it's more reliable for free tier
+      let response = await fetch('https://ipwho.is/', { timeout: 10000 } as any);
+
+      if (!response.ok) {
+        // Fallback to ipapi.co
+        response = await fetch('https://ipapi.co/json/', { timeout: 10000 } as any);
+      }
+
       const responseTime = Date.now() - startTime;
-      
+
       diagnostics.external_apis.ip_geolocation = {
         reachable: response.ok,
         response_time: responseTime,
@@ -216,11 +223,11 @@ class BackendConnectivityService {
     // Assess endpoint availability
     const endpointCount = Object.keys(diagnostics.backend.endpoints).length;
     const availableEndpoints = Object.values(diagnostics.backend.endpoints).filter(e => e.available).length;
-    
+
     if (endpointCount > 0) {
       totalServices += endpointCount;
       healthyServices += availableEndpoints;
-      
+
       if (availableEndpoints < endpointCount) {
         const unavailableEndpoints = Object.entries(diagnostics.backend.endpoints)
           .filter(([_, endpoint]) => !endpoint.available)
@@ -245,7 +252,7 @@ class BackendConnectivityService {
 
     // Determine overall status
     const healthRatio = healthyServices / totalServices;
-    
+
     if (healthRatio >= 0.8) {
       diagnostics.overall_status = 'healthy';
       if (recommendations.length === 0) {
@@ -276,7 +283,7 @@ class BackendConnectivityService {
 
   async generateConnectivityReport(): Promise<string> {
     const diagnostics = await this.runComprehensiveDiagnostics();
-    
+
     let report = `# Alert Aid Connectivity Diagnostics Report\n\n`;
     report += `**Generated**: ${new Date(diagnostics.timestamp).toISOString()}\n`;
     report += `**Overall Status**: ${diagnostics.overall_status.toUpperCase()}\n\n`;

@@ -20,7 +20,7 @@ export interface EnhancedLocationData extends LocationData {
 
 class EnhancedLocationService {
   private static instance: EnhancedLocationService;
-  
+
   static getInstance(): EnhancedLocationService {
     if (!EnhancedLocationService.instance) {
       EnhancedLocationService.instance = new EnhancedLocationService();
@@ -146,26 +146,81 @@ class EnhancedLocationService {
   }
 
   private async getNetworkLocation(): Promise<EnhancedLocationData | null> {
-    try {
-      // Use IP-based geolocation as fallback
-      const response = await fetch('https://ipapi.co/json/');
-      if (!response.ok) throw new Error('Network location failed');
+    const rawApiUrl = process.env.REACT_APP_API_URL || 'https://alert-aid-backend.onrender.com';
+    const API_BASE_URL = rawApiUrl.endsWith('/') ? rawApiUrl.slice(0, -1) : rawApiUrl;
 
-      const data = await response.json();
-      
-      return {
-        latitude: data.latitude,
-        longitude: data.longitude,
-        city: data.city || 'Unknown City',
-        state: data.region || 'Unknown State',
-        country: data.country_name || 'Unknown Country',
-        timestamp: Date.now(),
-        source: 'network'
-      };
-    } catch (error) {
-      console.error('Network location error:', error);
-      return null;
+    // List of free IP geolocation providers (HTTPS supported)
+    const providers = [
+      {
+        name: 'backend',
+        url: `${API_BASE_URL}/api/external/geolocation`,
+        map: (json: any) => ({
+          latitude: json.latitude,
+          longitude: json.longitude,
+          city: json.city || 'Unknown City',
+          state: json.region || 'Unknown State',
+          country: json.country || 'Unknown Country',
+          timestamp: Date.now(),
+          source: 'network' as const
+        })
+      },
+      {
+        name: 'ipwhois',
+        url: 'https://ipwho.is/',
+        map: (json: any) => ({
+          latitude: json.latitude,
+          longitude: json.longitude,
+          city: json.city || 'Unknown City',
+          state: json.region || 'Unknown State',
+          country: json.country || 'Unknown Country',
+          timestamp: Date.now(),
+          source: 'network' as const
+        })
+      },
+      {
+        name: 'ipapi',
+        url: 'https://ipapi.co/json/',
+        map: (json: any) => ({
+          latitude: json.latitude,
+          longitude: json.longitude,
+          city: json.city || 'Unknown City',
+          state: json.region || 'Unknown State',
+          country: json.country_name || 'Unknown Country',
+          timestamp: Date.now(),
+          source: 'network' as const
+        })
+      }
+    ];
+
+    for (const provider of providers) {
+      try {
+        console.log(`🌐 Attempting network location via ${provider.name}...`);
+        const response = await fetch(provider.url, { timeout: 5000 } as any);
+
+        if (!response.ok) {
+          console.warn(`⚠️ ${provider.name} failed with status ${response.status}`);
+          continue;
+        }
+
+        const data = await response.json();
+
+        // Validation for ipwho.is (it returns success field)
+        if (provider.name === 'ipwhois' && data.success === false) {
+          console.warn(`⚠️ ipwhois returned success = false: ${data.message}`);
+          continue;
+        }
+
+        const mappedData = provider.map(data);
+        if (mappedData.latitude && mappedData.longitude) {
+          return mappedData;
+        }
+      } catch (error) {
+        console.error(`${provider.name} network error:`, error);
+      }
     }
+
+    console.warn('❌ All network location providers failed');
+    return null;
   }
 
   private async reverseGeocode(lat: number, lon: number): Promise<LocationData> {
@@ -177,7 +232,7 @@ class EnhancedLocationService {
       if (!response.ok) throw new Error('Reverse geocoding failed');
 
       const data = await response.json();
-      
+
       if (data && data.length > 0) {
         const location = data[0];
         return {
@@ -201,7 +256,7 @@ class EnhancedLocationService {
       };
     } catch (error) {
       console.error('Reverse geocoding error:', error);
-      
+
       // Return coordinates as fallback
       return {
         latitude: lat,
@@ -241,15 +296,15 @@ class EnhancedLocationService {
 
   async getLocationString(location: EnhancedLocationData): Promise<string> {
     const parts = [];
-    
+
     if (location.city && location.city !== 'Unknown City') {
       parts.push(location.city);
     }
-    
+
     if (location.state && location.state !== 'Unknown State' && location.state !== 'Coordinates') {
       parts.push(location.state);
     }
-    
+
     if (location.country && location.country !== 'Unknown Country' && location.country !== 'GPS Location') {
       parts.push(location.country);
     }
@@ -259,7 +314,7 @@ class EnhancedLocationService {
     }
 
     let locationStr = parts.join(', ');
-    
+
     // Add source indicator
     switch (location.source) {
       case 'gps':

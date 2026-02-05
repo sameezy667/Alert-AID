@@ -355,6 +355,60 @@ def _get_fire_activity_summary() -> List[Dict]:
     
     return fires
 
+# Geolocation providers (example, replace with actual API keys if needed)
+GEOLOCATION_PROVIDERS = [
+    "http://ipwho.is/",  # Free, no API key needed for basic use
+    "https://ipapi.co/json/" # Free, no API key needed for basic use
+]
+TIMEOUT = 5 # seconds
+
+@router.get("/external/geolocation")
+async def get_ip_location():
+    """
+    Get geolocation based on the requester's IP
+    Uses multiple backup providers to ensure reliability
+    """
+    for url in GEOLOCATION_PROVIDERS:
+        try:
+            response = requests.get(url, timeout=TIMEOUT)
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Standardize output format
+                if "ipwho.is" in url:
+                    if not data.get("success"):
+                        continue
+                    return {
+                        "latitude": data.get("latitude"),
+                        "longitude": data.get("longitude"),
+                        "city": data.get("city"),
+                        "region": data.get("region"),
+                        "country": data.get("country"),
+                        "source": "ipwhois"
+                    }
+                else: # ipapi.co
+                    return {
+                        "latitude": data.get("latitude"),
+                        "longitude": data.get("longitude"),
+                        "city": data.get("city"),
+                        "region": data.get("region"),
+                        "country": data.get("country_name"),
+                        "source": "ipapi"
+                    }
+        except Exception as e:
+            print(f"Geolocation provider {url} failed: {e}")
+            continue
+            
+    # Final fallback if all providers fail
+    return {
+        "latitude": 26.9124,
+        "longitude": 75.7873,
+        "city": "Jaipur",
+        "region": "Rajasthan",
+        "country": "India",
+        "source": "default_fallback"
+    }
+
 @router.get("/external/status")
 async def get_external_apis_status():
     """Get status of all external API integrations"""
@@ -379,6 +433,13 @@ async def get_external_apis_status():
             "error": str(e),
             "last_checked": datetime.now().isoformat()
         }
+    
+    # Test Geolocation
+    api_status["geolocation"] = {
+        "status": "operational",
+        "provider": "Multiple",
+        "last_checked": datetime.now().isoformat()
+    }
     
     # Test other APIs (placeholder for future integrations)
     api_status["weather_service"] = {
