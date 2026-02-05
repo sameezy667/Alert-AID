@@ -12,11 +12,13 @@ Alert Aid is a real-time disaster management system with live APIs and ML predic
 ## Architecture
 - `/backend`: FastAPI application.
   - `main.py`: Entry point.
-  - `routes/`: API endpoint definitions (health, weather, alerts, etc.).
-- `/src`: React frontend.
-  - `services/`: API and logic services.
-  - `components/`: UI components.
-- `/docs`: Project documentation and guides.
+  - `routes/`: API- **Goal**: Resolving build errors for Vercel deployment (TypeScript & ESLint).
+- **Status**: 🟢 Build errors fixed. Waiting for deployment verification.
+- **Recent Fixes**:
+  - Added global `process` & `NodeJS` types.
+  - Resolved ESLint `exhaustive-deps` in hooks (`Dashboard`, `LocationContext`, etc.).
+  - Removed unused variables/imports across components.
+  - Cleaned up project root.
 
 ## Feature Status
 - [x] Dashboard UI
