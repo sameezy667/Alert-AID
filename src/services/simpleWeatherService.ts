@@ -4,7 +4,6 @@
  */
 
 const OPENWEATHER_API_KEY = '1801423b3942e324ab80f5b47afe0859';
-const ONE_CALL_API_URL = 'https://api.openweathermap.org/data/3.0/onecall';
 const WEATHER_API_URL = 'https://api.openweathermap.org/data/2.5/weather';
 
 export interface SimpleWeatherData {
@@ -33,7 +32,7 @@ export class SimpleWeatherService {
    */
   static async getWeather(lat: number, lon: number): Promise<SimpleWeatherData> {
     console.log(`🌤️ [SimpleWeatherService] Fetching weather for ${lat}, ${lon}`);
-    
+
     try {
       // Use Current Weather API 2.5 (free tier)
       return await this.getCurrentWeatherFallback(lat, lon);
@@ -48,20 +47,20 @@ export class SimpleWeatherService {
    */
   private static async getCurrentWeatherFallback(lat: number, lon: number): Promise<SimpleWeatherData> {
     console.log('🔄 [SimpleWeatherService] Using Current Weather API 2.5 fallback');
-    
+
     try {
       const weatherUrl = `${WEATHER_API_URL}?lat=${lat}&lon=${lon}&appid=${OPENWEATHER_API_KEY}&units=metric`;
       console.log('🌐 [SimpleWeatherService] Fallback URL:', weatherUrl);
-      
+
       const response = await fetch(weatherUrl);
-      
+
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-      
+
       const data = await response.json();
       console.log('✅ [SimpleWeatherService] Fallback API success:', data);
-      
+
       // Convert to our format
       const convertedData: SimpleWeatherData = {
         current: {
@@ -78,13 +77,13 @@ export class SimpleWeatherService {
         is_real: true,
         source: 'OpenWeatherMap Current Weather API 2.5'
       };
-      
+
       console.log('✅ [SimpleWeatherService] Converted data:', convertedData);
       return convertedData;
-      
+
     } catch (error) {
       console.error('❌ [SimpleWeatherService] Fallback failed:', error);
-      
+
       // Ultimate fallback: reasonable default data for Jaipur
       return this.getDefaultWeatherData();
     }
@@ -97,7 +96,7 @@ export class SimpleWeatherService {
    */
   private static getDefaultWeatherData(): SimpleWeatherData {
     console.error('❌ [SimpleWeatherService] ALL WEATHER APIs FAILED - NO FALLBACK DATA');
-    
+
     throw new Error('Weather service unavailable. All API endpoints failed. Please check your internet connection and try again.');
   }
 }
