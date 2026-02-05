@@ -79,14 +79,14 @@ const ToastCard = styled.div<{ type: ToastType; isExiting: boolean }>`
     right: 0;
     height: 3px;
     background: ${({ theme, type }) => {
-      switch (type) {
-        case 'success': return theme.colors.gradients.success;
-        case 'warning': return theme.colors.gradients.warning;
-        case 'error': return theme.colors.gradients.error;
-        case 'info': return theme.colors.gradients.info;
-        default: return theme.colors.gradients.primary;
-      }
-    }};
+    switch (type) {
+      case 'success': return theme.colors.gradients.success;
+      case 'warning': return theme.colors.gradients.warning;
+      case 'error': return theme.colors.gradients.error;
+      case 'info': return theme.colors.gradients.info;
+      default: return theme.colors.gradients.primary;
+    }
+  }};
     border-radius: ${({ theme }) => theme.borderRadius.lg} ${({ theme }) => theme.borderRadius.lg} 0 0;
   }
 `;
@@ -182,10 +182,10 @@ const ToastComponent: React.FC<{
     }
   };
 
-  const handleDismiss = () => {
+  const handleDismiss = useCallback(() => {
     setIsExiting(true);
     setTimeout(() => onDismiss(toast.id), 300);
-  };
+  }, [onDismiss, toast.id]);
 
   useEffect(() => {
     if (!toast.persistent && toast.duration) {
