@@ -7,10 +7,10 @@ import { useState, useEffect } from 'react';
 // Realistic fallback data generator for when APIs are unavailable
 const generateRealisticFallbackData = () => {
   const currentTime = new Date().toISOString();
-  
+
   return {
     riskPrediction: {
-      overall_risk: ['low','moderate','high','critical'][Math.floor(Math.random()*4)],
+      overall_risk: ['low', 'moderate', 'high', 'critical'][Math.floor(Math.random() * 4)],
       risk_score: Math.floor(1 + Math.random() * 10),
       flood_risk: Math.floor(1 + Math.random() * 10),
       fire_risk: Math.floor(1 + Math.random() * 10),
@@ -20,7 +20,7 @@ const generateRealisticFallbackData = () => {
       location_analyzed: { latitude: 0, longitude: 0 },
       is_real: false
     },
-    
+
     weather: {
       temperature: 20 + Math.random() * 10, // 20-30°C (Celsius like our APIs)
       conditions: ['Partly Cloudy', 'Overcast', 'Light Rain', 'Clear', 'Cloudy'][Math.floor(Math.random() * 5)],
@@ -31,7 +31,7 @@ const generateRealisticFallbackData = () => {
       uv_index: Math.floor(Math.random() * 8) + 1, // 1-8
       last_updated: currentTime
     },
-    
+
     modelPerformance: {
       accuracy: 0.87 + Math.random() * 0.08, // 87-95%
       precision: 0.84 + Math.random() * 0.11, // 84-95%
@@ -58,7 +58,7 @@ export function useDashboard() {
   useEffect(() => {
     if (location && !isEnhancingLocation) {
       setIsEnhancingLocation(true);
-      
+
       ExternalAPIService.getEnhancedLocationData(location)
         .then((enhanced) => {
           console.log('🌍 Enhanced location data obtained:', enhanced);
@@ -73,7 +73,7 @@ export function useDashboard() {
           setIsEnhancingLocation(false);
         });
     }
-  }, [location]);
+  }, [location, isEnhancingLocation]);
 
   // Listen for location changes from other sources
   useEffect(() => {
@@ -86,7 +86,7 @@ export function useDashboard() {
     };
 
     window.addEventListener('location-changed', handleLocationChange);
-    
+
     return () => {
       window.removeEventListener('location-changed', handleLocationChange);
     };
@@ -129,11 +129,11 @@ export function useDashboard() {
   return {
     // Location data (enhanced with real environmental data)
     location: enhancedLocationData || location,
-    
+
     // API health
     isApiHealthy: isHealthy,
     checkApiHealth: checkHealth,
-    
+
     // Disaster data with realistic fallbacks
     riskPrediction: riskPrediction || fallbackData.riskPrediction,
     weather: enhancedWeatherData || weather || fallbackData.weather,
@@ -141,31 +141,31 @@ export function useDashboard() {
     alertsCount: alerts?.count || 0,
     forecast: [], // Endpoint removed
     modelPerformance: fallbackData.modelPerformance, // Use fallback since endpoint removed
-    
+
     // Loading states
     isLoading: Object.values(loading).some(Boolean) || isEnhancingLocation,
     loadingStates: { ...loading, enhancingLocation: isEnhancingLocation },
-    
+
     // Error states  
     hasErrors: Object.values(errors).some(error => error !== null),
     errors,
-    
+
     // Enhanced location features
     enhancedLocation: enhancedLocationData,
     locationRiskFactors: enhancedLocationData?.riskFactors,
     recentEarthquakes: enhancedLocationData?.earthquakes?.features?.length || 0,
-    
+
     // Metadata
     lastUpdated,
-    
+
     // Actions
     refreshData: refreshAllData,
     clearError,
-    
-  // Computed properties for dashboard display
-  overallRisk: riskPrediction?.overall_risk || 'unknown',
-  riskLevel: riskPrediction?.overall_risk || 'unknown',
-    activeAlertsCount: alerts?.alerts?.filter(alert => 
+
+    // Computed properties for dashboard display
+    overallRisk: riskPrediction?.overall_risk || 'unknown',
+    riskLevel: riskPrediction?.overall_risk || 'unknown',
+    activeAlertsCount: alerts?.alerts?.filter(alert =>
       alert.severity === 'High' || alert.urgency === 'Immediate'
     ).length || 0,
     weatherSummary: weather ? {
@@ -180,7 +180,7 @@ export function useDashboard() {
 // Legacy hooks for backward compatibility
 export function useCurrentAlerts() {
   const { alerts, loadingStates, errors, refreshData } = useDashboard();
-  
+
   return {
     data: alerts,
     loading: loadingStates.alerts,
@@ -195,7 +195,7 @@ export function useSevenDayForecast() {
     data: null,
     loading: false,
     error: null,
-    refetch: () => {},
+    refetch: () => { },
   };
 }
 
@@ -205,24 +205,24 @@ export function useModelPerformance() {
     data: null,
     loading: false,
     error: null,
-    refetch: () => {},
+    refetch: () => { },
   };
 }
 
 export function useActiveIncidents() {
   // Map alerts to incident-like structure for backward compatibility
   const { alerts, loadingStates, errors, refreshData } = useDashboard();
-  
-    const incidents = alerts.map(alert => ({
-      id: alert.id,
-      type: alert.event,
-      severity: alert.severity.toLowerCase(),
-      location: alert.areas.join(', '),
-      description: alert.description,
-      timestamp: alert.onset,
-      status: 'active',
-    }));
-  
+
+  const incidents = alerts.map(alert => ({
+    id: alert.id,
+    type: alert.event,
+    severity: alert.severity.toLowerCase(),
+    location: alert.areas.join(', '),
+    description: alert.description,
+    timestamp: alert.onset,
+    status: 'active',
+  }));
+
   return {
     data: incidents,
     loading: loadingStates.alerts,
@@ -233,7 +233,7 @@ export function useActiveIncidents() {
 
 export function useSeverityByRegion() {
   const { alerts, riskPrediction, loadingStates, errors } = useDashboard();
-  
+
   // Create region severity data based on current risk and alerts
   const regionData = alerts.length > 0 ? alerts.map(alert => ({
     region: alert.areas[0] || 'Unknown',
@@ -241,12 +241,12 @@ export function useSeverityByRegion() {
     riskScore: riskPrediction?.overall_risk || 0,
     alertCount: 1,
   })) : [];
-  
+
   return {
     data: regionData,
     loading: loadingStates.alerts || loadingStates.riskPrediction,
     error: errors.alerts || errors.riskPrediction,
-    refetch: () => {}, // Use main dashboard refresh
+    refetch: () => { }, // Use main dashboard refresh
   };
 }
 
@@ -254,7 +254,7 @@ export function useSeverityByRegion() {
 export function useRunPrediction() {
   const { location } = useGeolocation();
   const { riskPrediction, refreshRiskPrediction, loading } = useDisasterData(location);
-  
+
   return {
     mutate: async (params?: any) => {
       console.log('🔮 Running ML prediction with params:', params);
@@ -299,22 +299,22 @@ export function useRunPrediction() {
 
 export function useCreateEmergencyAlert() {
   const { refreshData } = useDashboard();
-  
+
   return {
     mutate: async (alertData: any) => {
       console.log('🚨 Creating emergency alert:', alertData);
-      
+
       // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
+
       console.log('📡 Broadcasting to emergency services...');
       console.log('📱 Sending push notifications to residents...');
       console.log('📻 Activating emergency broadcast system...');
-      
+
       // In a real implementation, this would call an API to create an alert
       // For now, we'll refresh the data to simulate system response
       refreshData();
-      
+
       console.log('✅ Emergency alert broadcast complete');
     },
     loading: false,
