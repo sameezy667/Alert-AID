@@ -44,13 +44,13 @@ export const LocationProvider: React.FC<LocationProviderProps> = ({ children }) 
       try {
         const savedLocation = localStorage.getItem('alertaid-location');
         const locationPrompted = localStorage.getItem('alertaid-location-prompted');
-        
+
         // If we have a saved location that's less than 1 hour old, use it
         if (savedLocation) {
           try {
             const locationData: LocationData = JSON.parse(savedLocation);
             const age = Date.now() - (locationData.timestamp || 0);
-            
+
             // Use cached location if less than 1 hour old
             if (age < 60 * 60 * 1000) {
               console.log('📍 Using cached location (less than 1 hour old)');
@@ -62,7 +62,7 @@ export const LocationProvider: React.FC<LocationProviderProps> = ({ children }) 
             console.warn('Failed to parse saved location:', e);
           }
         }
-        
+
         // If user was already prompted and denied, don't ask again this session
         if (locationPrompted === 'denied') {
           console.log('📍 User previously denied location access');
@@ -75,36 +75,36 @@ export const LocationProvider: React.FC<LocationProviderProps> = ({ children }) 
           }
           return;
         }
-        
+
         // Request fresh geolocation
         if ('geolocation' in navigator) {
           console.log('📍 LocationContext: Requesting live browser geolocation...');
-          
+
           navigator.geolocation.getCurrentPosition(
             async (position) => {
               const lat = position.coords.latitude;
               const lon = position.coords.longitude;
-              
+
               console.log(`✅ LocationContext: Got live GPS location: ${lat}, ${lon}`);
-              
+
               // Reverse geocode to get city, state, country
               const locationData = await reverseGeocode(lat, lon);
-              
+
               console.log('📍 LocationContext: Reverse geocoded to:', locationData);
-              
+
               setCurrentLocation(locationData);
               setIsLocationLoaded(true);
               setShowLocationModal(false);
-              
+
               // Save to BOTH localStorage locations
               localStorage.setItem('alertaid-location', JSON.stringify(locationData));
               localStorage.setItem('enhanced-location-cache', JSON.stringify(locationData));
               localStorage.setItem('alertaid-location-prompted', 'granted');
-              
+
               // Trigger custom event
               console.log('📡 LocationContext: Broadcasting location-changed event');
               window.dispatchEvent(new CustomEvent('location-changed', { detail: locationData }));
-              
+
               // Dispatch again to ensure all listeners catch it
               setTimeout(() => {
                 window.dispatchEvent(new CustomEvent('location-changed', { detail: locationData }));
@@ -112,10 +112,10 @@ export const LocationProvider: React.FC<LocationProviderProps> = ({ children }) 
             },
             (error) => {
               console.warn('❌ LocationContext: Geolocation denied or failed:', error.message);
-              
+
               // Mark as denied
               localStorage.setItem('alertaid-location-prompted', 'denied');
-              
+
               // Fallback: use saved location if available
               if (savedLocation) {
                 try {
@@ -140,7 +140,7 @@ export const LocationProvider: React.FC<LocationProviderProps> = ({ children }) 
         } else {
           // Browser doesn't support geolocation
           console.warn('⚠️ Geolocation not supported');
-          
+
           if (savedLocation) {
             const locationData: LocationData = JSON.parse(savedLocation);
             setCurrentLocation(locationData);
@@ -167,18 +167,18 @@ export const LocationProvider: React.FC<LocationProviderProps> = ({ children }) 
             }
           }
         );
-        
+
         if (!nominatimResponse.ok) {
           throw new Error(`Nominatim geocoding failed: ${nominatimResponse.status}`);
         }
-        
+
         const nominatimData = await nominatimResponse.json();
-        
+
         if (nominatimData && nominatimData.address) {
           const addr = nominatimData.address;
           // Prioritize: city > town > village > suburb > municipality
-          const cityName = addr.city || addr.town || addr.village || addr.suburb || 
-                          addr.municipality || addr.county || 'Unknown City';
+          const cityName = addr.city || addr.town || addr.village || addr.suburb ||
+            addr.municipality || addr.county || 'Unknown City';
           console.log('✅ Nominatim reverse geocode success:', {
             city: cityName,
             state: addr.state,
@@ -200,20 +200,20 @@ export const LocationProvider: React.FC<LocationProviderProps> = ({ children }) 
         }
       } catch (nominatimError) {
         console.warn('⚠️ Nominatim geocoding failed, trying OpenWeatherMap...', nominatimError);
-        
+
         // Fallback 1: Try OpenWeatherMap
         try {
           const API_KEY = '1801423b3942e324ab80f5b47afe0859';
           const response = await fetch(
             `https://api.openweathermap.org/geo/1.0/reverse?lat=${lat}&lon=${lon}&limit=1&appid=${API_KEY}`
           );
-          
+
           if (!response.ok) {
             throw new Error(`OpenWeatherMap geocoding failed: ${response.status}`);
           }
-          
+
           const data = await response.json();
-          
+
           if (data && data.length > 0) {
             const location = data[0];
             console.log('✅ OpenWeatherMap reverse geocode success:', location.name);
@@ -231,19 +231,19 @@ export const LocationProvider: React.FC<LocationProviderProps> = ({ children }) 
           }
         } catch (owmError) {
           console.warn('⚠️ OpenWeatherMap geocoding failed, trying BigDataCloud...', owmError);
-          
+
           // Fallback 2: Try BigDataCloud (free, no API key required)
           try {
             const bdcResponse = await fetch(
               `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`
             );
-            
+
             if (!bdcResponse.ok) {
               throw new Error(`BigDataCloud geocoding failed: ${bdcResponse.status}`);
             }
-            
+
             const bdcData = await bdcResponse.json();
-            
+
             if (bdcData) {
               console.log('✅ BigDataCloud reverse geocode success:', bdcData.city);
               return {
@@ -260,7 +260,7 @@ export const LocationProvider: React.FC<LocationProviderProps> = ({ children }) 
             }
           } catch (bdcError) {
             console.error('❌ All reverse geocoding APIs failed:', bdcError);
-            
+
             // Return basic location data with coordinates only
             return {
               latitude: lat,
@@ -277,25 +277,25 @@ export const LocationProvider: React.FC<LocationProviderProps> = ({ children }) 
     };
 
     checkExistingLocation();
-  }, []);
+  }, [locationRequested]);
 
   const setLocation = (location: LocationData) => {
     console.log('📍 Setting new location:', location);
-    
+
     // Add timestamp if not present
     const locationWithTimestamp = {
       ...location,
       timestamp: location.timestamp || Date.now()
     };
-    
+
     setCurrentLocation(locationWithTimestamp);
     setIsLocationLoaded(true);
     setShowLocationModal(false);
-    
+
     // Save to localStorage
     localStorage.setItem('alertaid-location', JSON.stringify(locationWithTimestamp));
     localStorage.setItem('alertaid-location-prompted', 'granted');
-    
+
     // Trigger custom event for other components to refresh data
     console.log('📡 Broadcasting location-changed event');
     window.dispatchEvent(new CustomEvent('location-changed', { detail: locationWithTimestamp }));
