@@ -8,7 +8,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
 import { MapPin, AlertCircle, Navigation } from 'lucide-react';
 import { enhancedSpacing } from '../../styles/enhanced-design-system';
-import { LocationPermissionModalProps, ReverseGeocodeResponse } from './types';
+import { LocationPermissionModalProps } from './types';
 import { ExternalAPIService } from '../../services/externalAPIs';
 
 // Animation keyframes (for future use)
@@ -187,7 +187,7 @@ export const LocationPermissionModal: React.FC<LocationPermissionModalProps> = (
 
     try {
       console.log('🌍 Requesting location using enhanced API service...');
-      
+
       // Use the enhanced browser location function from ExternalAPIService
       const locationData = await ExternalAPIService.getBrowserLocation();
 
@@ -203,9 +203,9 @@ export const LocationPermissionModal: React.FC<LocationPermissionModalProps> = (
 
     } catch (error: any) {
       console.error('Location request failed:', error);
-      
+
       let errorMessage = 'Failed to get your location. ';
-      
+
       switch (error.code) {
         case GeolocationPositionError.PERMISSION_DENIED:
           errorMessage = 'Location permission denied. You can still use Alert Aid by entering your location manually.';
@@ -219,7 +219,7 @@ export const LocationPermissionModal: React.FC<LocationPermissionModalProps> = (
         default:
           errorMessage = error.message || 'An unknown error occurred while getting your location.';
       }
-      
+
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -255,13 +255,13 @@ export const LocationPermissionModal: React.FC<LocationPermissionModalProps> = (
             <MapPin size={40} color="white" />
           </LocationIcon>
         </ModalHeader>
-        
+
         <ModalTitle id="location-modal-title">
           Location Access Required
         </ModalTitle>
-        
+
         <ModalDescription id="location-modal-description">
-          Alert Aid needs your location to provide accurate disaster predictions, weather alerts, and emergency response information for your area. 
+          Alert Aid needs your location to provide accurate disaster predictions, weather alerts, and emergency response information for your area.
           Your location data stays on your device and is only used for disaster predictions.
         </ModalDescription>
 
@@ -271,10 +271,10 @@ export const LocationPermissionModal: React.FC<LocationPermissionModalProps> = (
             <span>{error}</span>
           </ErrorMessage>
         )}
-        
+
         <ButtonGroup>
-          <PrimaryButton 
-            onClick={requestLocation} 
+          <PrimaryButton
+            onClick={requestLocation}
             disabled={isLoading}
             aria-label={error && error.includes('timed out') ? "Try location access again" : "Allow location access"}
           >
@@ -290,8 +290,8 @@ export const LocationPermissionModal: React.FC<LocationPermissionModalProps> = (
               </>
             )}
           </PrimaryButton>
-          
-          <SecondaryButton 
+
+          <SecondaryButton
             onClick={() => onManualEntry && onManualEntry()}
             aria-label="Enter location manually"
           >
