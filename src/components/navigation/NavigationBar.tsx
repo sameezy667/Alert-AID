@@ -5,11 +5,11 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
 import styled from 'styled-components';
-import { 
-  Home, 
-  BarChart3, 
-  AlertTriangle, 
-  MapPin, 
+import {
+  Home,
+  BarChart3,
+  AlertTriangle,
+  MapPin,
   Shield,
   RefreshCw,
   Menu,
@@ -17,11 +17,10 @@ import {
   Search
 } from 'lucide-react';
 import ManualLocationSearch from '../Location/ManualLocationSearch';
-import { 
-  productionColors, 
+import {
+  productionColors,
   productionAnimations
 } from '../../styles/production-ui-system';
-import { enhancedLocationService } from '../../services/enhancedLocationService';
 import { LiveStatusBadge, GPSStatusBadge, LastUpdatedBadge } from '../common/StatusBadges';
 
 const NavigationContainer = styled.nav`
@@ -111,42 +110,42 @@ const NavItem = styled.button<{ isActive?: boolean }>`
   overflow: hidden;
   
   /* Aesthetic gradient background for active state */
-  background: ${({ isActive }) => 
-    isActive 
+  background: ${({ isActive }) =>
+    isActive
       ? `linear-gradient(135deg, ${productionColors.brand.primary} 0%, ${productionColors.brand.secondary} 100%)`
       : 'transparent'
   };
-  color: ${({ isActive }) => 
-    isActive 
-      ? 'white' 
+  color: ${({ isActive }) =>
+    isActive
+      ? 'white'
       : productionColors.text.secondary
   };
   
   /* Subtle glow effect for active button */
-  box-shadow: ${({ isActive }) => 
-    isActive 
+  box-shadow: ${({ isActive }) =>
+    isActive
       ? '0 4px 12px rgba(239, 68, 68, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
       : 'none'
   };
   
   /* Hover effect with smooth transform */
   &:hover {
-    background: ${({ isActive }) => 
-      isActive 
-        ? `linear-gradient(135deg, ${productionColors.brand.secondary} 0%, ${productionColors.brand.dark} 100%)`
-        : `rgba(239, 68, 68, 0.08)`
-    };
-    color: ${({ isActive }) => 
-      isActive 
-        ? 'white' 
-        : productionColors.text.primary
-    };
+    background: ${({ isActive }) =>
+    isActive
+      ? `linear-gradient(135deg, ${productionColors.brand.secondary} 0%, ${productionColors.brand.dark} 100%)`
+      : `rgba(239, 68, 68, 0.08)`
+  };
+    color: ${({ isActive }) =>
+    isActive
+      ? 'white'
+      : productionColors.text.primary
+  };
     transform: translateY(-2px);
-    box-shadow: ${({ isActive }) => 
-      isActive 
-        ? '0 6px 16px rgba(239, 68, 68, 0.4)'
-        : '0 2px 8px rgba(0, 0, 0, 0.1)'
-    };
+    box-shadow: ${({ isActive }) =>
+    isActive
+      ? '0 6px 16px rgba(239, 68, 68, 0.4)'
+      : '0 2px 8px rgba(0, 0, 0, 0.1)'
+  };
   }
   
   &:active {
@@ -256,9 +255,9 @@ const RefreshButton = styled.button<{ isLoading?: boolean }>`
   svg {
     width: 14px;
     height: 14px;
-    animation: ${({ isLoading }) => 
-      isLoading ? 'spin 1s linear infinite' : 'none'
-    };
+    animation: ${({ isLoading }) =>
+    isLoading ? 'spin 1s linear infinite' : 'none'
+  };
   }
 `;
 
@@ -322,9 +321,9 @@ interface NavigationBarProps {
   onNavigate?: (page: string) => void;
 }
 
-export const NavigationBar: React.FC<NavigationBarProps> = ({ 
+export const NavigationBar: React.FC<NavigationBarProps> = ({
   currentPage = 'dashboard',
-  onNavigate 
+  onNavigate
 }) => {
   const [locationString, setLocationString] = useState('Detecting location...');
   const [isLocationLoading, setIsLocationLoading] = useState(false);
@@ -351,11 +350,11 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
       console.log('🗑️ Clearing ALL location caches...');
       localStorage.removeItem('enhanced-location-cache');
       localStorage.removeItem('alertaid-location');
-      
+
       // Use browser geolocation API directly for most accurate results
       if ('geolocation' in navigator) {
         console.log('📍 Requesting fresh GPS location...');
-        
+
         const position = await new Promise<GeolocationPosition>((resolve, reject) => {
           navigator.geolocation.getCurrentPosition(resolve, reject, {
             enableHighAccuracy: true,
@@ -363,12 +362,12 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
             maximumAge: 0 // Force fresh position
           });
         });
-        
+
         const lat = position.coords.latitude;
         const lon = position.coords.longitude;
-        
+
         console.log(`✅ GPS coordinates obtained: ${lat}, ${lon}`);
-        
+
         // Reverse geocode using Nominatim (most accurate)
         let locationData: any;
         try {
@@ -378,12 +377,12 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
               headers: { 'User-Agent': 'AlertAid-DisasterApp/1.0' }
             }
           );
-          
+
           const nominatimData = await nominatimResponse.json();
           if (nominatimData && nominatimData.address) {
             const addr = nominatimData.address;
-            const cityName = addr.city || addr.town || addr.village || addr.suburb || 
-                            addr.municipality || addr.county || 'Unknown';
+            const cityName = addr.city || addr.town || addr.village || addr.suburb ||
+              addr.municipality || addr.county || 'Unknown';
             locationData = {
               latitude: lat,
               longitude: lon,
@@ -426,23 +425,23 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
             isManual: false
           };
         }
-        
+
         const displayString = `${locationData.city}, ${locationData.state || locationData.country}`;
         setLocationString(displayString);
         setIsGPSEnabled(true);
         setIsLive(true);
         setLastUpdated(new Date());
-        
+
         // Save to localStorage
         localStorage.setItem('enhanced-location-cache', JSON.stringify(locationData));
         localStorage.setItem('alertaid-location', JSON.stringify(locationData));
-        
+
         console.log('📍 Location updated to:', displayString, locationData);
-        
+
         // Broadcast location change event
         console.log('📡 Broadcasting location-changed event...');
         window.dispatchEvent(new CustomEvent('location-changed', { detail: locationData }));
-        
+
         setTimeout(() => {
           window.dispatchEvent(new CustomEvent('location-changed', { detail: locationData }));
         }, 150);
@@ -458,21 +457,6 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
     }
   }, []);
 
-  // Clear all location caches and force fresh GPS location
-  const clearLocationCache = useCallback(() => {
-    console.log('🧹 Clearing all location caches...');
-    localStorage.removeItem('alertaid-location');
-    localStorage.removeItem('enhanced-location-cache');
-    localStorage.removeItem('alertaid-location-prompted');
-    setLocationString('Refreshing...');
-    setIsGPSEnabled(false);
-    setIsLive(false);
-    
-    // Trigger fresh GPS location after clearing
-    setTimeout(() => {
-      updateLocation();
-    }, 100);
-  }, [updateLocation]);
 
   // Initialize location on mount (but don't auto-refresh - let LocationContext handle it)
   useEffect(() => {
@@ -495,7 +479,7 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
         updateLocation();
       }
     }
-    
+
     // Listen for location changes from other components
     const handleLocationUpdate = (event: any) => {
       if (event.detail) {
@@ -508,9 +492,9 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
         console.log('📍 NavigationBar: Received location update:', displayString);
       }
     };
-    
+
     window.addEventListener('location-changed', handleLocationUpdate);
-    
+
     return () => {
       window.removeEventListener('location-changed', handleLocationUpdate);
     };
@@ -527,16 +511,16 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
 
   const handleManualLocationSelect = useCallback((location: { latitude: number; longitude: number; city?: string; country?: string }) => {
     // Update location display
-    const displayString = location.city 
+    const displayString = location.city
       ? `${location.city}${location.country ? `, ${location.country}` : ''}`
       : `${location.latitude.toFixed(4)}°, ${location.longitude.toFixed(4)}°`;
-    
+
     setLocationString(displayString);
     setIsGPSEnabled(false); // Manual location, not GPS
     setIsLive(true);
     setLastUpdated(new Date());
     setShowManualLocationModal(false);
-    
+
     // Save to localStorage for persistence in BOTH locations
     const locationData = {
       latitude: location.latitude,
@@ -548,18 +532,18 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
       timestamp: Date.now(),
       isManual: true
     };
-    
+
     // Save to both cache locations
     localStorage.setItem('enhanced-location-cache', JSON.stringify(locationData));
     localStorage.setItem('alertaid-location', JSON.stringify(locationData));
     localStorage.setItem('alertaid-location-prompted', 'granted');
-    
+
     console.log('📍 Manual location set and saved to localStorage:', locationData);
-    
+
     // Dispatch event for ALL components to refresh their data
     console.log('📡 Broadcasting location-changed event...');
     window.dispatchEvent(new CustomEvent('location-changed', { detail: locationData }));
-    
+
     // Small delay then dispatch again to ensure all listeners catch it
     setTimeout(() => {
       window.dispatchEvent(new CustomEvent('location-changed', { detail: locationData }));
@@ -574,78 +558,78 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
           onClose={() => setShowManualLocationModal(false)}
         />
       )}
-    <NavigationContainer>
-      <Brand>
-        <img 
-          src="/Gemini_Generated_Image_7c3uv87c3uv87c3u.svg" 
-          alt="Alert Aid Logo" 
-          className="brand-logo"
-        />
-        <span>Alert Aid</span>
-      </Brand>
+      <NavigationContainer>
+        <Brand>
+          <img
+            src="/Gemini_Generated_Image_7c3uv87c3uv87c3u.svg"
+            alt="Alert Aid Logo"
+            className="brand-logo"
+          />
+          <span>Alert Aid</span>
+        </Brand>
 
-      <NavigationItems isOpen={isMobileMenuOpen}>
-        <StatusBadgeContainer>
-          <LiveStatusBadge isLive={isLive} />
-          <GPSStatusBadge enabled={isGPSEnabled} />
-          <LastUpdatedBadge timestamp={lastUpdated} />
-        </StatusBadgeContainer>
-        
-        <LocationSection>
-          <MapPin size={12} />
-          <LocationText>{locationString}</LocationText>
-          <RefreshButton 
-            onClick={() => setShowManualLocationModal(true)}
-            title="Search location manually"
-          >
-            <Search />
-          </RefreshButton>
-          <RefreshButton 
-            onClick={updateLocation}
-            isLoading={isLocationLoading}
-            title="Refresh location"
-          >
-            <RefreshCw />
-          </RefreshButton>
-        </LocationSection>
+        <NavigationItems isOpen={isMobileMenuOpen}>
+          <StatusBadgeContainer>
+            <LiveStatusBadge isLive={isLive} />
+            <GPSStatusBadge enabled={isGPSEnabled} />
+            <LastUpdatedBadge timestamp={lastUpdated} />
+          </StatusBadgeContainer>
 
-        {navigationItems.map(({ id, label, icon: Icon }) => (
-          <NavItem
-            key={id}
-            isActive={currentPage === id}
-            onClick={() => handleNavigation(id)}
-          >
-            <Icon />
-            <span>{label}</span>
-          </NavItem>
-        ))}
-      </NavigationItems>
+          <LocationSection>
+            <MapPin size={12} />
+            <LocationText>{locationString}</LocationText>
+            <RefreshButton
+              onClick={() => setShowManualLocationModal(true)}
+              title="Search location manually"
+            >
+              <Search />
+            </RefreshButton>
+            <RefreshButton
+              onClick={updateLocation}
+              isLoading={isLocationLoading}
+              title="Refresh location"
+            >
+              <RefreshCw />
+            </RefreshButton>
+          </LocationSection>
 
-      <MobileMenuButton 
-        onClick={toggleMobileMenu}
-        aria-label="Toggle navigation menu"
-      >
-        {isMobileMenuOpen ? <X /> : <Menu />}
-      </MobileMenuButton>
-      <StarToggleButton
-        title="Toggle starfield background"
-        aria-label="Toggle starfield background"
-        onClick={() => {
-          try {
-            const cur = localStorage.getItem('starfieldEnabled');
-            const next = cur === null ? 'false' : (cur === 'true' ? 'false' : 'true');
-            localStorage.setItem('starfieldEnabled', next);
-            // emit global event
-            window.dispatchEvent(new CustomEvent('starfield:toggle', { detail: next === 'true' }));
-          } catch (err) {
-            console.warn('Failed toggling starfield', err);
-          }
-        }}
-      >
-        {/* simple star icon using unicode to avoid adding icon deps */}
-        <span style={{fontSize: 14}}>✦</span>
-      </StarToggleButton>
-    </NavigationContainer>
+          {navigationItems.map(({ id, label, icon: Icon }) => (
+            <NavItem
+              key={id}
+              isActive={currentPage === id}
+              onClick={() => handleNavigation(id)}
+            >
+              <Icon />
+              <span>{label}</span>
+            </NavItem>
+          ))}
+        </NavigationItems>
+
+        <MobileMenuButton
+          onClick={toggleMobileMenu}
+          aria-label="Toggle navigation menu"
+        >
+          {isMobileMenuOpen ? <X /> : <Menu />}
+        </MobileMenuButton>
+        <StarToggleButton
+          title="Toggle starfield background"
+          aria-label="Toggle starfield background"
+          onClick={() => {
+            try {
+              const cur = localStorage.getItem('starfieldEnabled');
+              const next = cur === null ? 'false' : (cur === 'true' ? 'false' : 'true');
+              localStorage.setItem('starfieldEnabled', next);
+              // emit global event
+              window.dispatchEvent(new CustomEvent('starfield:toggle', { detail: next === 'true' }));
+            } catch (err) {
+              console.warn('Failed toggling starfield', err);
+            }
+          }}
+        >
+          {/* simple star icon using unicode to avoid adding icon deps */}
+          <span style={{ fontSize: 14 }}>✦</span>
+        </StarToggleButton>
+      </NavigationContainer>
     </>
   );
 };
