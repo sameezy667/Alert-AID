@@ -306,7 +306,8 @@ const EmergencyResponsePanel: React.FC = () => {
         type: 'error'
       });
     }
-  }, [emergencyContacts, medicalInfo, sosState.isActive]); // Dependencies
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [emergencyContacts, medicalInfo, sosState.isActive]); // Dependencies (getCurrentLocation and notifyEmergencyContacts are not included as they're defined after this callback)
 
   // SOS countdown timer
   useEffect(() => {

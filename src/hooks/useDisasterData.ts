@@ -133,7 +133,7 @@ export const useDisasterData = (location: LocationData | null) => {
     } finally {
       setLoading(prev => ({ ...prev, riskPrediction: false }));
     }
-  }, [clearError, handleApiError, addNotification]);
+  }, [clearError, addNotification]);
 
   // Fetch weather data
   const fetchWeather = useCallback(async (lat: number, lon: number) => {

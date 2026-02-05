@@ -55,6 +55,7 @@
   },
   "devDependencies": {
     "@types/styled-components": "^5.1.34",
-    "@types/three": "^0.180.0"
+    "@types/three": "^0.180.0",
+    "baseline-browser-mapping": "^2.9.19"
   }
 }
