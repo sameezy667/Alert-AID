@@ -469,11 +469,20 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
       try {
         const locationData = JSON.parse(savedLocation);
         const displayString = `${locationData.city}, ${locationData.state || locationData.country}`;
+        const locationAge = Date.now() - (locationData.timestamp || 0);
+        const isGpsLocation = locationData.source === 'gps';
+        const shouldRefresh = !isGpsLocation || locationAge > 5 * 60 * 1000;
+
         setLocationString(displayString);
-        setIsGPSEnabled(locationData.source === 'gps');
+        setIsGPSEnabled(isGpsLocation);
         setIsLive(true);
         setLastUpdated(new Date(locationData.timestamp || Date.now()));
         console.log('📍 NavigationBar: Using saved location:', displayString);
+
+        if (shouldRefresh) {
+          console.log('🔄 NavigationBar: Cached location is stale/non-GPS, refreshing location');
+          updateLocation();
+        }
       } catch (e) {
         console.warn('Failed to parse saved location, fetching fresh');
         updateLocation();

@@ -6,6 +6,8 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { LocationData } from '../components/Location/EnhancedLocationPermissionModal';
 
+const LOCATION_CACHE_MAX_AGE_MS = 5 * 60 * 1000;
+
 interface LocationContextType {
   currentLocation: LocationData | null;
   isLocationLoaded: boolean;
@@ -45,15 +47,16 @@ export const LocationProvider: React.FC<LocationProviderProps> = ({ children }) 
         const savedLocation = localStorage.getItem('alertaid-location');
         const locationPrompted = localStorage.getItem('alertaid-location-prompted');
 
-        // If we have a saved location that's less than 1 hour old, use it
+        // Only trust very recent GPS cache to avoid stale city lock-in.
         if (savedLocation) {
           try {
             const locationData: LocationData = JSON.parse(savedLocation);
             const age = Date.now() - (locationData.timestamp || 0);
+            const isGpsLocation = (locationData as any).source === 'gps';
 
-            // Use cached location if less than 1 hour old
-            if (age < 60 * 60 * 1000) {
-              console.log('📍 Using cached location (less than 1 hour old)');
+            // Use cached location only if it is a recent GPS fix.
+            if (age < LOCATION_CACHE_MAX_AGE_MS && isGpsLocation) {
+              console.log('📍 Using recent cached GPS location');
               setCurrentLocation(locationData);
               setIsLocationLoaded(true);
               return;
@@ -63,17 +66,29 @@ export const LocationProvider: React.FC<LocationProviderProps> = ({ children }) 
           }
         }
 
-        // If user was already prompted and denied, don't ask again this session
+        // If user denied earlier, re-check permission state before deciding.
         if (locationPrompted === 'denied') {
-          console.log('📍 User previously denied location access');
-          if (savedLocation) {
-            const locationData: LocationData = JSON.parse(savedLocation);
-            setCurrentLocation(locationData);
-            setIsLocationLoaded(true);
-          } else {
-            setShowLocationModal(true);
+          console.log('📍 User previously denied location access - rechecking permission state');
+
+          try {
+            if ('permissions' in navigator && (navigator as any).permissions?.query) {
+              const permission = await (navigator as any).permissions.query({ name: 'geolocation' });
+              if (permission.state === 'granted') {
+                localStorage.setItem('alertaid-location-prompted', 'granted');
+              } else if (permission.state === 'denied') {
+                if (savedLocation) {
+                  const locationData: LocationData = JSON.parse(savedLocation);
+                  setCurrentLocation(locationData);
+                  setIsLocationLoaded(true);
+                } else {
+                  setShowLocationModal(true);
+                }
+                return;
+              }
+            }
+          } catch (permissionError) {
+            console.warn('⚠️ Could not query geolocation permission state:', permissionError);
           }
-          return;
         }
 
         // Request fresh geolocation

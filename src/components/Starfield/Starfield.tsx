@@ -79,7 +79,10 @@ const Starfield: React.FC = () => {
     };
 
     const shouldAnimate = () => {
-      const prm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const mediaQuery = typeof window.matchMedia === 'function'
+        ? window.matchMedia('(prefers-reduced-motion: reduce)')
+        : null;
+      const prm = !!mediaQuery?.matches;
       return !prm && enabled;
     };
 

@@ -7,8 +7,14 @@ describe('Starfield', () => {
     // Mock canvas and context
     HTMLCanvasElement.prototype.getContext = jest.fn(() => ({
       fillStyle: '',
+      setTransform: jest.fn(),
       fillRect: jest.fn(),
+      clearRect: jest.fn(),
       beginPath: jest.fn(),
+      closePath: jest.fn(),
+      moveTo: jest.fn(),
+      lineTo: jest.fn(),
+      stroke: jest.fn(),
       arc: jest.fn(),
       fill: jest.fn(),
       createRadialGradient: jest.fn(() => ({
