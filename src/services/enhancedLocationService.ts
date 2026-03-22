@@ -41,10 +41,38 @@ class EnhancedLocationService {
       return defaultLocation;
     }
 
-    // If forcing refresh, clear cache immediately
+    // Manual override should always win, even when refresh is requested.
+    const manualOverride = this.getStoredLocation('location-override');
+    if (manualOverride) {
+      console.log('📝 Using explicit manual location override:', manualOverride);
+      return {
+        ...manualOverride,
+        source: 'manual',
+        timestamp: manualOverride.timestamp || Date.now(),
+        isStale: false
+      };
+    }
+
+    const explicitLocation = this.getStoredLocation('alertaid-location');
+    if (explicitLocation && (explicitLocation.source === 'manual' || explicitLocation.isManual)) {
+      console.log('📝 Using explicit manual location from alertaid-location:', explicitLocation);
+      return {
+        ...explicitLocation,
+        source: 'manual',
+        timestamp: explicitLocation.timestamp || Date.now(),
+        isStale: false
+      };
+    }
+
+    // If forcing refresh, clear only non-manual cache immediately
     if (forceRefresh) {
-      console.log('🔄 Force refresh requested - clearing cache');
-      localStorage.removeItem('enhanced-location-cache');
+      const cachedLocation = this.getCachedLocation();
+      if (!cachedLocation || cachedLocation.source !== 'manual') {
+        console.log('🔄 Force refresh requested - clearing non-manual cache');
+        localStorage.removeItem('enhanced-location-cache');
+      } else {
+        console.log('🔄 Force refresh requested but manual cache is active; preserving it');
+      }
     } else {
       // Check for cached location if not forcing refresh
       const cachedLocation = this.getCachedLocation();
@@ -287,6 +315,17 @@ class EnhancedLocationService {
       console.warn('Failed to retrieve cached location:', error);
     }
     return null;
+  }
+
+  private getStoredLocation(key: string): EnhancedLocationData | null {
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch (error) {
+      console.warn(`Failed to retrieve location from ${key}:`, error);
+      return null;
+    }
   }
 
   private isLocationStale(location: EnhancedLocationData): boolean {

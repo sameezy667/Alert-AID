@@ -545,6 +545,7 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
     // Save to both cache locations
     localStorage.setItem('enhanced-location-cache', JSON.stringify(locationData));
     localStorage.setItem('alertaid-location', JSON.stringify(locationData));
+    localStorage.setItem('location-override', JSON.stringify(locationData));
     localStorage.setItem('alertaid-location-prompted', 'granted');
 
     console.log('📍 Manual location set and saved to localStorage:', locationData);

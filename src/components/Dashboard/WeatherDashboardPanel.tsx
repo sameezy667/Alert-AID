@@ -547,12 +547,12 @@ const WeatherDashboardPanel: React.FC = () => {
     const getCurrentLocation = async () => {
       try {
         console.log('📍 Fetching location for weather (default: Jaipur, India)...');
-        const location = await enhancedLocationService.getCurrentLocation(true);
+        const location = await enhancedLocationService.getCurrentLocation();
         console.log('✅ Got location:', location);
         setCurrentLocation({
           lat: location.latitude,
           lon: location.longitude,
-          city: `${location.city}, ${location.state}`
+          city: `${location.city}${location.state ? `, ${location.state}` : ''}`
         });
       } catch (error) {
         console.error('❌ Failed to get location, using Jaipur as default:', error);
@@ -566,6 +566,27 @@ const WeatherDashboardPanel: React.FC = () => {
     };
 
     getCurrentLocation();
+
+    const handleLocationChange = (event: Event) => {
+      const detail = (event as CustomEvent).detail;
+      if (!detail || typeof detail.latitude !== 'number' || typeof detail.longitude !== 'number') {
+        return;
+      }
+
+      const cityLabel = `${detail.city || 'Unknown'}${detail.state ? `, ${detail.state}` : (detail.country ? `, ${detail.country}` : '')}`;
+      console.log('📡 WeatherDashboardPanel: applying location-changed event:', cityLabel, detail.latitude, detail.longitude);
+
+      setCurrentLocation({
+        lat: detail.latitude,
+        lon: detail.longitude,
+        city: cityLabel
+      });
+    };
+
+    window.addEventListener('location-changed', handleLocationChange as EventListener);
+    return () => {
+      window.removeEventListener('location-changed', handleLocationChange as EventListener);
+    };
   }, []);
 
   useEffect(() => {

@@ -309,6 +309,7 @@ export const LocationProvider: React.FC<LocationProviderProps> = ({ children }) 
 
     // Save to localStorage
     localStorage.setItem('alertaid-location', JSON.stringify(locationWithTimestamp));
+    localStorage.setItem('enhanced-location-cache', JSON.stringify(locationWithTimestamp));
     localStorage.setItem('alertaid-location-prompted', 'granted');
 
     // Trigger custom event for other components to refresh data
