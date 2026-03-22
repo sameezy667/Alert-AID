@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { 
   Cloud, 
@@ -355,97 +355,102 @@ const EnhancedWeatherWidget: React.FC = () => {
     return 'Weather conditions are favorable. Normal safety precautions apply.';
   };
 
-  useEffect(() => {
-    let isMounted = true;
+  const fetchWeather = useCallback(async (locationOverride?: {
+    latitude: number;
+    longitude: number;
+    city?: string;
+    state?: string;
+    country?: string;
+  }) => {
     let retryCount = 0;
     const maxRetries = 3;
 
-    const fetchWeather = async () => {
-      if (!isMounted) return;
-      
+    const runFetch = async (): Promise<void> => {
       try {
         setLoading(true);
         console.log('🌤️ [EnhancedWeatherWidget] Starting weather fetch...');
-        
-        // Get location with retry
-        console.log('📍 [EnhancedWeatherWidget] Getting current location...');
-        const loc = await enhancedLocationService.getCurrentLocation();
-        if (!isMounted) return;
-        
-        console.log('📍 [EnhancedWeatherWidget] Location obtained:', {
+
+        const loc = locationOverride ?? await enhancedLocationService.getCurrentLocation();
+
+        console.log('📍 [EnhancedWeatherWidget] Location used:', {
           city: loc.city,
           state: loc.state,
           country: loc.country,
           lat: loc.latitude,
           lon: loc.longitude
         });
-        setLocation(`${loc.city}, ${loc.state || loc.country}`);
-        
-        // Get weather data with simple reliable service
+        setLocation(`${loc.city || 'Unknown'}${loc.state ? `, ${loc.state}` : (loc.country ? `, ${loc.country}` : '')}`);
+
         console.log('☀️ [EnhancedWeatherWidget] Fetching weather data for coordinates:', loc.latitude, loc.longitude);
         const weatherData = await SimpleWeatherService.getWeather(loc.latitude, loc.longitude);
-        if (!isMounted) return;
-        
-        console.log('☀️ [EnhancedWeatherWidget] Weather data received:', {
-          temp: weatherData.current.temp,
-          condition: weatherData.current.weather[0].main,
-          humidity: weatherData.current.humidity,
-          windSpeed: weatherData.current.wind_speed
-        });
-        
+
         const weatherState = {
           temp: Math.round(weatherData.current.temp),
           feelsLike: Math.round(weatherData.current.feels_like),
           condition: weatherData.current.weather[0].main,
           humidity: weatherData.current.humidity,
-          windSpeed: Math.round(weatherData.current.wind_speed * 3.6), // m/s to km/h
+          windSpeed: Math.round(weatherData.current.wind_speed * 3.6),
           pressure: weatherData.current.pressure,
           visibility: Math.round(weatherData.current.visibility / 1000),
           uvIndex: weatherData.current.uvi,
           lastUpdated: weatherData.last_updated || new Date().toISOString()
         };
-        
+
         setWeather(weatherState);
         console.log('✅ [EnhancedWeatherWidget] Weather state updated successfully:', weatherState);
-        
-        retryCount = 0; // Reset retry count on success
       } catch (error) {
         console.error('❌ [EnhancedWeatherWidget] Weather fetch error:', error);
-        console.error('❌ [EnhancedWeatherWidget] Error details:', {
-          message: error instanceof Error ? error.message : 'Unknown error',
-          stack: error instanceof Error ? error.stack : undefined
-        });
-        
-        // Retry logic
-        if (retryCount < maxRetries && isMounted) {
+
+        if (retryCount < maxRetries) {
           retryCount++;
           const retryDelay = 2000 * retryCount;
           console.log(`🔄 [EnhancedWeatherWidget] Retrying weather fetch (${retryCount}/${maxRetries}) in ${retryDelay}ms...`);
-          setTimeout(fetchWeather, retryDelay); // Exponential backoff
-        } else {
-          console.error(`❌ [EnhancedWeatherWidget] Max retries (${maxRetries}) reached. Weather data unavailable.`);
+          await new Promise(resolve => setTimeout(resolve, retryDelay));
+          return runFetch();
         }
+
+        console.error(`❌ [EnhancedWeatherWidget] Max retries (${maxRetries}) reached. Weather data unavailable.`);
       } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
+        setLoading(false);
       }
     };
 
+    await runFetch();
+  }, []);
+
+  useEffect(() => {
     console.log('🚀 [EnhancedWeatherWidget] Component mounted, initiating first weather fetch...');
     fetchWeather();
-    
+
     const interval = setInterval(() => {
       console.log('🔄 [EnhancedWeatherWidget] Auto-refresh triggered (10-minute interval)');
       fetchWeather();
-    }, 10 * 60 * 1000); // Update every 10 minutes
-    
+    }, 10 * 60 * 1000);
+
+    const handleLocationChanged = (event: Event) => {
+      const detail = (event as CustomEvent).detail;
+      if (!detail || typeof detail.latitude !== 'number' || typeof detail.longitude !== 'number') {
+        return;
+      }
+
+      console.log('📡 [EnhancedWeatherWidget] location-changed received, refreshing weather immediately:', detail);
+      fetchWeather({
+        latitude: detail.latitude,
+        longitude: detail.longitude,
+        city: detail.city,
+        state: detail.state,
+        country: detail.country,
+      });
+    };
+
+    window.addEventListener('location-changed', handleLocationChanged as EventListener);
+
     return () => {
       console.log('🛑 [EnhancedWeatherWidget] Component unmounting, cleaning up...');
-      isMounted = false;
       clearInterval(interval);
+      window.removeEventListener('location-changed', handleLocationChanged as EventListener);
     };
-  }, []);
+  }, [fetchWeather]);
 
   if (loading || !weather) {
     return <SkeletonWeatherWidget />;
